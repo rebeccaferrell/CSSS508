@@ -627,12 +627,24 @@ Coefficients:
 Try running `summary(f_ae_reg)`.
 
 
+Installing packages
+===
+incremental: true
+
+Let's make a table that looks a little less code-y in the output. To do this, we'll want to install a **package** called `pander`.
+
+In the console: `install.packages("pander", repos = "http://cran.us.r-project.org")`.
+
+* You can leave off the `repos` argument if you configure your default repository settings: *Preferences* > *Packages* > *CRAN mirror*. I suggest the Hutch.  
+
+* Once you install a package, you don't need to re-install it until you update R.
+
+
 Making tables
 ===
-First in the console: `install.packages("pander", repos = "http://cran.us.r-project.org")`. Then:
 
 ```r
-library(pander) # loads pander
+library(pander) # loads pander, do once in your session
 pander(summary(swiss), style = "rmarkdown", split.tables = 120)
 ```
 
@@ -672,9 +684,9 @@ type: section
 
 Write up a .Rmd file showing some exploratory analyses of the Swiss fertility data. Upload both the .Rmd file and the .html file to Canvas.
 
-Mix in-line R calculations, R output, and plots with text describing the relationships you see. You must use in-line R calculations/references at least once (e.g. with functions like `nrow`, `mean`, `sd`, `cor`, `median`, `min`, `quantile`) and may not hard-code any numbers referenced in your text.
+Mix in-line R calculations, tables, R output, and plots with text describing the relationships you see. You must use in-line R calculations/references at least once (e.g. with functions like `nrow`, `mean`, `sd`, `cor`, `median`, `min`, `quantile`) and may not hard-code any numbers referenced in your text.
 
-Your document should be pleasant for a peer to look at next week, with  some organization using sections or lists, and all plots labeled clearly. Use chunk options `echo` and `results` to limit the code/output you show in the .html. Discussion of specific values should be summarized in sentences in your text --- not as printed code and output --- and rounded so as not to be absurdly precise.
+Your document should be pleasant for a peer to look at, with some organization using sections or lists, and all plots labeled clearly. Use chunk options `echo` and `results` to limit the code/output you show in the .html. Discussion of specific values should be summarized in sentences in your text --- not as printed code and output --- and rounded so as not to be absurdly precise.
 
 
 Grading rubric
