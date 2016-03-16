@@ -619,7 +619,7 @@ type: section
 
 Pick some relationship to look at in the Gapminder data (e.g. changes in life expectancy over time) and write up a .Rmd file describing `ggplot2` visualizations used to investigate that question. You can choose to work with a subset of the data (e.g. just African countries). Upload both the .Rmd file and the .html file to Canvas.
 
-You should include somewhere between 4 and 8 graphs. All titles, axes, and legends should be labelled clearly (not raw variable names). You must have at least one graph with `facet_wrap` or `facet_grid`. You must include at least one manually specified legend.
+You should include somewhere between 4 and 8 graphs. All titles, axes, and legends should be labelled clearly (not raw variable names). You must have at least one graph with `facet_wrap` or `facet_grid`. You must include at least one manually specified legend. You can go beyond the `geoms` covered today if you want to make histograms, bar charts, add vertical or horizontal lines, etc.
 
 Your document should be pleasant for a peer to look at, with some organization. You must write up your observations in words as well as showing the graphs. Use chunk options `echo` and `results` to limit the code/output you show in the .html.
 
