@@ -527,7 +527,32 @@ lifeExp_by_year +
 ![plot of chunk unnamed-chunk-31](slides_week_2-figure/unnamed-chunk-31-1.png) 
 
 
-Customizing legends
+Fussy manual legend example code
+===
+
+
+```r
+ggplot(data = gapminder,
+       aes(x = year, y = lifeExp, group = country)) +
+    geom_line(alpha = 0.5, aes(color = "Country", size = "Country")) +
+    geom_line(stat = "smooth", method = "loess",
+              aes(group = continent, color = "Continent",
+                  size = "Continent"), alpha = 0.5) +
+    facet_wrap(~ continent, nrow = 2) +
+    scale_color_manual(name = "Unit", values = c("Country" = "black", "Continent" = "dodgerblue1")) +
+    scale_size_manual(name = "Unit", values = c("Country" = 1, "Continent" = 3)) +
+    theme_minimal(base_size = 20) + 
+    theme(legend.position=c(0.75, 0.2))
+```
+
+Fussy manual legend example result!
+===
+
+![plot of chunk unnamed-chunk-33](slides_week_2-figure/unnamed-chunk-33-1.png) 
+
+Observation: one could use `filter` to identify the countries with dips in life expectancy and investigate.
+
+More on customizing legends
 ===
 
 You can move the legends around, flip their orientation, remove them altogether, etc. The [Cookbook for R website](http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/) is my go-to for burning questions such as how to change the legend labels.
