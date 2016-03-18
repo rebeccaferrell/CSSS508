@@ -110,33 +110,33 @@ Filtering data frames
 
 
 ```r
-gapminder %>% filter(country == "Afghanistan")
+gapminder %>% filter(country == "Oman")
 ```
 
 ```
 Source: local data frame [12 x 6]
 
-       country continent  year lifeExp      pop gdpPercap
-        (fctr)    (fctr) (int)   (dbl)    (int)     (dbl)
-1  Afghanistan      Asia  1952  28.801  8425333  779.4453
-2  Afghanistan      Asia  1957  30.332  9240934  820.8530
-3  Afghanistan      Asia  1962  31.997 10267083  853.1007
-4  Afghanistan      Asia  1967  34.020 11537966  836.1971
-5  Afghanistan      Asia  1972  36.088 13079460  739.9811
-6  Afghanistan      Asia  1977  38.438 14880372  786.1134
-7  Afghanistan      Asia  1982  39.854 12881816  978.0114
-8  Afghanistan      Asia  1987  40.822 13867957  852.3959
-9  Afghanistan      Asia  1992  41.674 16317921  649.3414
-10 Afghanistan      Asia  1997  41.763 22227415  635.3414
-11 Afghanistan      Asia  2002  42.129 25268405  726.7341
-12 Afghanistan      Asia  2007  43.828 31889923  974.5803
+   country continent  year lifeExp     pop gdpPercap
+    (fctr)    (fctr) (int)   (dbl)   (int)     (dbl)
+1     Oman      Asia  1952  37.578  507833  1828.230
+2     Oman      Asia  1957  40.080  561977  2242.747
+3     Oman      Asia  1962  43.165  628164  2924.638
+4     Oman      Asia  1967  46.988  714775  4720.943
+5     Oman      Asia  1972  52.143  829050 10618.039
+6     Oman      Asia  1977  57.367 1004533 11848.344
+7     Oman      Asia  1982  62.728 1301048 12954.791
+8     Oman      Asia  1987  67.734 1593882 18115.223
+9     Oman      Asia  1992  71.197 1915208 18616.707
+10    Oman      Asia  1997  72.499 2283635 19702.056
+11    Oman      Asia  2002  74.193 2713462 19774.837
+12    Oman      Asia  2007  75.640 3204897 22316.193
 ```
 
 Logical operators
 ===
 incremental: true
 
-We used `==` for testing "equals": `country == "Afghanistan"`. We can also use other operators:
+We used `==` for testing "equals": `country == "Oman"`. We can also use other operators:
 
 * `!=`: not equal to
 * `>`, `>=`, `<`, `<=`: less than, less than or equal to, etc.
@@ -146,6 +146,7 @@ Or we can combine multiple logical conditions:
 
 * `&`: both conditions need to hold (AND)
 * `|`: at least one condition needs to hold (OR)
+* `!`: negates a logical condition (`TRUE` -> `FALSE`, `FALSE` -> `TRUE`)
 
 
 Multiple conditions example
@@ -155,19 +156,19 @@ incremental: true
 
 ```r
 gapminder %>%
-    filter( (country == "Afghanistan") &
+    filter( (country == "Oman") &
                 (year > 1980) & (year <= 2000) )
 ```
 
 ```
 Source: local data frame [4 x 6]
 
-      country continent  year lifeExp      pop gdpPercap
-       (fctr)    (fctr) (int)   (dbl)    (int)     (dbl)
-1 Afghanistan      Asia  1982  39.854 12881816  978.0114
-2 Afghanistan      Asia  1987  40.822 13867957  852.3959
-3 Afghanistan      Asia  1992  41.674 16317921  649.3414
-4 Afghanistan      Asia  1997  41.763 22227415  635.3414
+  country continent  year lifeExp     pop gdpPercap
+   (fctr)    (fctr) (int)   (dbl)   (int)     (dbl)
+1    Oman      Asia  1982  62.728 1301048  12954.79
+2    Oman      Asia  1987  67.734 1593882  18115.22
+3    Oman      Asia  1992  71.197 1915208  18616.71
+4    Oman      Asia  1997  72.499 2283635  19702.06
 ```
 
 
@@ -178,8 +179,7 @@ If we think a particular subset will be used repeatedly, we can save it and give
 
 
 ```r
-China <- gapminder %>%
-    filter(country == "China")
+China <- gapminder %>% filter(country == "China")
 head(China, 4)
 ```
 
@@ -240,7 +240,7 @@ ggplot(data = China,
 
 ![plot of chunk unnamed-chunk-11](slides_week_2-figure/unnamed-chunk-11-1.png) 
 
-Axis labels, bigger red points, no gray background
+Axis labels, points, no gray background
 ===
 left: 60%
 
@@ -328,7 +328,7 @@ Aesthetics
 * `size`: set size of points/lines based on some data value
 
 
-Aesthetics: "setting" vs. "mapping"
+Aesthetics: setting vs. mapping
 ===
 incremental: true
 
@@ -338,7 +338,9 @@ Layers take arguments to control their appearance, such as point/line colors or 
 
 * Arguments inside `aes()` (**mapping aesthetics**) will *depend on the data*, e.g. `geom_point(aes(color = continent))`.
 
-* `aes()` in the `ggplot()` layer sets the overall aesthetics to apply to other layers, but can be changed on individual layers (including switching `x` or `y` to different variables)
+* `aes()` in the `ggplot()` layer gives overall aesthetics to use in other layers, but can be changed on individual layers (including switching `x` or `y` to different variables)
+
+(I am pedantic about these terms because it will make searching for help online easier for you.)
 
 
 Storing plots
@@ -497,12 +499,12 @@ Examples:
 Color, shape, etc. scales
 ===
 
-**Scales** control how the mapped aesthetics (data-dependent) appear. `ggplot2` uses reasonable defaults, but you can modify these with a `scale_[aesthetic]_[option]()` layer where `[aesthetic]` is `color`, `shape`, `linetype`, `alpha`, `size`, `fill`, etc. and `[option]` is something like `manual`, `continuous` or `discrete` (depending on nature of the variable), or a few other variations.
+**Scales** control how the mapped aesthetics appear. You can modify these with a `scale_[aesthetic]_[option]()` layer where `[aesthetic]` is `color`, `shape`, `linetype`, `alpha`, `size`, `fill`, etc. and `[option]` is something like `manual`, `continuous` or `discrete` (depending on nature of the variable).
 
 Examples:
-* `scale_linetype_manual()` has you manually specify the linetype for each different value
-* `scale_alpha_continuous()` varies transparency over a continuous range
-* `scale_color_brewer(palette = "Spectral")` uses a palette from <http://colorbrewer2.org> (great site for picking nice plot colors!)
+* `scale_linetype_manual()`: manually specify the linetype for each different value
+* `scale_alpha_continuous()`: varies transparency over a continuous range
+* `scale_color_brewer(palette = "Spectral")`: uses a palette from <http://colorbrewer2.org> (great site for picking nice plot colors!)
 
 When confused...Google it!
 
@@ -555,7 +557,7 @@ Observation: one could use `filter` to identify the countries with dips in life 
 More on customizing legends
 ===
 
-You can move the legends around, flip their orientation, remove them altogether, etc. The [Cookbook for R website](http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/) is my go-to for burning questions such as how to change the legend labels.
+You can move the legends around, flip their orientation, remove them altogether, etc. The [Cookbook for R website](http://www.cookbook-r.com/Graphs/Legends_(ggplot2)) is my go-to for burning questions such as how to change the legend labels.
 
 
 Saving ggplots
@@ -572,13 +574,15 @@ ggsave("I_saved_a_file.pdf", plot = lifeExp_by_year,
 
 If you didn't manually set font sizes, these will usually come out at a reasonable size given the dimensions of your output file.
 
-Bad/non-reproducible way: choose *Export* on the plot preview.
+**Bad/non-reproducible way**: choose *Export* on the plot preview.
 
 
 Additional bonus ggplot fun
 ===
 
-To really wow everyone, install the [`gganimate` package](https://github.com/dgrtwo/gganimate), which adds a `frame` aesthetic:
+To really wow everyone, install the [`gganimate` package](https://github.com/dgrtwo/gganimate), which adds a `frame` aesthetic.
+
+Note: `gganimate` isn't available on CRAN, so needs to be installed from github using the `devtools` package. Uncomment the lines to do this for the first time.
 
 
 ```r
@@ -617,9 +621,9 @@ Homework
 ===
 type: section
 
-Pick some relationship to look at in the Gapminder data (e.g. changes in life expectancy over time) and write up a .Rmd file describing `ggplot2` visualizations used to investigate that question. You can choose to work with a subset of the data (e.g. just African countries). Upload both the .Rmd file and the .html file to Canvas.
+Pick some relationship to look at in the Gapminder data (e.g. changes in life expectancy over time) and write up a .Rmd file investigating that question graphically. You might work with a subset of the data (e.g. just Africa). Upload both the .Rmd file and the .html file to Canvas.
 
-You should include somewhere between 4 and 8 graphs. All titles, axes, and legends should be labelled clearly (not raw variable names). You must have at least one graph with `facet_wrap` or `facet_grid`. You must include at least one manually specified legend. You can go beyond the `geoms` covered today if you want to make histograms, bar charts, add vertical or horizontal lines, etc.
+You should include somewhere between 4 and 8 graphs. All titles, axes, and legends should be labelled clearly (no raw variable names). You must have at least one graph with `facet_wrap` or `facet_grid`. You must include at least one manually specified legend. You can use other `geoms` like histograms, bar charts, add vertical or horizontal lines, etc.
 
 Your document should be pleasant for a peer to look at, with some organization. You must write up your observations in words as well as showing the graphs. Use chunk options `echo` and `results` to limit the code/output you show in the .html.
 

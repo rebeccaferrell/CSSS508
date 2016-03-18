@@ -83,14 +83,14 @@ Filtering data frames
 ===
 
 ```{r}
-gapminder %>% filter(country == "Afghanistan")
+gapminder %>% filter(country == "Oman")
 ```
 
 Logical operators
 ===
 incremental: true
 
-We used `==` for testing "equals": `country == "Afghanistan"`. We can also use other operators:
+We used `==` for testing "equals": `country == "Oman"`. We can also use other operators:
 
 * `!=`: not equal to
 * `>`, `>=`, `<`, `<=`: less than, less than or equal to, etc.
@@ -100,6 +100,7 @@ Or we can combine multiple logical conditions:
 
 * `&`: both conditions need to hold (AND)
 * `|`: at least one condition needs to hold (OR)
+* `!`: negates a logical condition (`TRUE` -> `FALSE`, `FALSE` -> `TRUE`)
 
 
 Multiple conditions example
@@ -108,7 +109,7 @@ incremental: true
 
 ```{r}
 gapminder %>%
-    filter( (country == "Afghanistan") &
+    filter( (country == "Oman") &
                 (year > 1980) & (year <= 2000) )
 ```
 
@@ -119,8 +120,7 @@ Saving a subset
 If we think a particular subset will be used repeatedly, we can save it and give it a name:
 
 ```{r}
-China <- gapminder %>%
-    filter(country == "China")
+China <- gapminder %>% filter(country == "China")
 head(China, 4)
 ```
 
@@ -173,7 +173,7 @@ ggplot(data = China,
     geom_point()
 ```
 
-Axis labels, bigger red points, no gray background
+Axis labels, points, no gray background
 ===
 left: 60%
 
@@ -284,7 +284,7 @@ Aesthetics
 * `size`: set size of points/lines based on some data value
 
 
-Aesthetics: "setting" vs. "mapping"
+Aesthetics: setting vs. mapping
 ===
 incremental: true
 
@@ -294,7 +294,9 @@ Layers take arguments to control their appearance, such as point/line colors or 
 
 * Arguments inside `aes()` (**mapping aesthetics**) will *depend on the data*, e.g. `geom_point(aes(color = continent))`.
 
-* `aes()` in the `ggplot()` layer sets the overall aesthetics to apply to other layers, but can be changed on individual layers (including switching `x` or `y` to different variables)
+* `aes()` in the `ggplot()` layer gives overall aesthetics to use in other layers, but can be changed on individual layers (including switching `x` or `y` to different variables)
+
+(I am pedantic about these terms because it will make searching for help online easier for you.)
 
 
 Storing plots
@@ -469,12 +471,12 @@ Examples:
 Color, shape, etc. scales
 ===
 
-**Scales** control how the mapped aesthetics (data-dependent) appear. `ggplot2` uses reasonable defaults, but you can modify these with a `scale_[aesthetic]_[option]()` layer where `[aesthetic]` is `color`, `shape`, `linetype`, `alpha`, `size`, `fill`, etc. and `[option]` is something like `manual`, `continuous` or `discrete` (depending on nature of the variable), or a few other variations.
+**Scales** control how the mapped aesthetics appear. You can modify these with a `scale_[aesthetic]_[option]()` layer where `[aesthetic]` is `color`, `shape`, `linetype`, `alpha`, `size`, `fill`, etc. and `[option]` is something like `manual`, `continuous` or `discrete` (depending on nature of the variable).
 
 Examples:
-* `scale_linetype_manual()` has you manually specify the linetype for each different value
-* `scale_alpha_continuous()` varies transparency over a continuous range
-* `scale_color_brewer(palette = "Spectral")` uses a palette from <http://colorbrewer2.org> (great site for picking nice plot colors!)
+* `scale_linetype_manual()`: manually specify the linetype for each different value
+* `scale_alpha_continuous()`: varies transparency over a continuous range
+* `scale_color_brewer(palette = "Spectral")`: uses a palette from <http://colorbrewer2.org> (great site for picking nice plot colors!)
 
 When confused...Google it!
 
@@ -545,7 +547,7 @@ Observation: one could use `filter` to identify the countries with dips in life 
 More on customizing legends
 ===
 
-You can move the legends around, flip their orientation, remove them altogether, etc. The [Cookbook for R website](http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/) is my go-to for burning questions such as how to change the legend labels.
+You can move the legends around, flip their orientation, remove them altogether, etc. The [Cookbook for R website](http://www.cookbook-r.com/Graphs/Legends_(ggplot2)) is my go-to for burning questions such as how to change the legend labels.
 
 
 Saving ggplots
@@ -561,13 +563,15 @@ ggsave("I_saved_a_file.pdf", plot = lifeExp_by_year,
 
 If you didn't manually set font sizes, these will usually come out at a reasonable size given the dimensions of your output file.
 
-Bad/non-reproducible way: choose *Export* on the plot preview.
+**Bad/non-reproducible way**: choose *Export* on the plot preview.
 
 
 Additional bonus ggplot fun
 ===
 
-To really wow everyone, install the [`gganimate` package](https://github.com/dgrtwo/gganimate), which adds a `frame` aesthetic:
+To really wow everyone, install the [`gganimate` package](https://github.com/dgrtwo/gganimate), which adds a `frame` aesthetic.
+
+Note: `gganimate` isn't available on CRAN, so needs to be installed from github using the `devtools` package. Uncomment the lines to do this for the first time.
 
 ```{r}
 # install.packages("devtools")
@@ -604,9 +608,9 @@ Homework
 ===
 type: section
 
-Pick some relationship to look at in the Gapminder data (e.g. changes in life expectancy over time) and write up a .Rmd file describing `ggplot2` visualizations used to investigate that question. You can choose to work with a subset of the data (e.g. just African countries). Upload both the .Rmd file and the .html file to Canvas.
+Pick some relationship to look at in the Gapminder data (e.g. changes in life expectancy over time) and write up a .Rmd file investigating that question graphically. You might work with a subset of the data (e.g. just Africa). Upload both the .Rmd file and the .html file to Canvas.
 
-You should include somewhere between 4 and 8 graphs. All titles, axes, and legends should be labelled clearly (not raw variable names). You must have at least one graph with `facet_wrap` or `facet_grid`. You must include at least one manually specified legend. You can go beyond the `geoms` covered today if you want to make histograms, bar charts, add vertical or horizontal lines, etc.
+You should include somewhere between 4 and 8 graphs. All titles, axes, and legends should be labelled clearly (no raw variable names). You must have at least one graph with `facet_wrap` or `facet_grid`. You must include at least one manually specified legend. You can use other `geoms` like histograms, bar charts, add vertical or horizontal lines, etc.
 
 Your document should be pleasant for a peer to look at, with some organization. You must write up your observations in words as well as showing the graphs. Use chunk options `echo` and `results` to limit the code/output you show in the .html.
 
