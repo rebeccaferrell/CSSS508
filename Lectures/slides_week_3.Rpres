@@ -1,0 +1,322 @@
+CSSS 508, Week 3
+===
+author: Rebecca Ferrell
+date: April 13, 2016
+transition: rotate
+width: 1100
+height: 750
+
+
+Weaning you off of spreadsheets
+===
+
+Today we'll talk about `dplyr`: a package that does in R just about any calculation you've tried to do in Excel, but more *transparently*, *reproducibly*, and *safely*.
+
+Don't be the sad research assistant who made this mistake ([Reinhart and Rogoff](http://www.bloomberg.com/news/articles/2013-04-18/faq-reinhart-rogoff-and-the-excel-error-that-changed-history)):
+
+![Reinhart and Rogoff's spreadsheet error](http://rooseveltinstitute.org/wp-content/uploads/styles/large/public/content_images/reinhart_rogoff_coding_error_0.png)
+
+
+
+Modifying data frames with dplyr
+===
+type: section
+
+
+Filtering rows (subsetting)
+===
+
+Recall last week we used the `filter` command to subset data like so:
+```{r}
+library(dplyr)
+library(gapminder)
+
+Canada <- gapminder %>%
+    filter(country == "Canada")
+```
+
+Excel analogue:
+
+![Excel's filter](http://content.gcflearnfree.org/topics/143/ex07_filter.gif)
+
+
+%in%
+===
+
+Common use case: want to filter rows to things in some set. The `c()` function (**c**ombine, **c**oncatenate) is how we make **vectors** in R, which is an important data type. We'll talk more about those next week.
+
+```{r}
+former_yugoslavia <- c("Bosnia and Herzegovina", "Croatia", "Macedonia", "Montenegro", "Serbia", "Slovenia")
+yugoslavia <- gapminder %>%
+    filter(country %in% former_yugoslavia)
+tail(yugoslavia, 2)
+```
+
+
+What to include in my vector? Use distinct
+===
+
+You can see all the values in your data for columns using `distinct`:
+
+```{r}
+gapminder %>% distinct(continent)
+```
+
+This works for multiple columns too to get all combinations:
+
+```{r, eval=FALSE}
+gapminder %>% distinct(continent, year)
+```
+
+
+Time to talk about pipes (%>%)
+===
+
+The `dplyr` package makes use of an operator (not native to R) called a **pipe**. We write pipes like `%>%` (*Cntl-Shift-M*). Pipes take the object on the left and apply the function on the right to them. Read out loud: "and then..."
+
+```{r}
+gapminder %>% filter(country == "Canada") %>% head(2)
+```
+
+Pipes save us typing and allow chaining like above, so we use them all the time when manipulating data frames.
+
+
+Piping comments
+===
+incremental: true
+
+- Pipes are clearer to read when you have each function on a separate line (inconsistent in these slides because of space constraints).
+```{r, eval=FALSE}
+take_this_data %>%
+    do_first_thing(with = this_value) %>%
+    do_next_thing(using = that_value) %>% ...
+```
+
+- The stuff on the left of the pipe is passed to the *first argument* of the function on the right. Other arguments go on the right when we pipe the function. (If you look at `dplyr` documentation where you see functions but not pipes, you see the first argument is always the data.)
+
+- If you ever find yourself piping a function where the data is not the first argument (as shown in its help page), use `.` in the data argument instead.
+```{r, eval=FALSE}
+yugoslavia %>% lm(pop ~ year, data = .)
+```
+
+
+Sorting: arrange
+===
+
+Along with filtering the data to see just certain types of rows, we might want to sort it:
+
+```{r}
+yugoslavia %>% arrange(year, desc(pop))
+```
+
+
+Keeping columns: select
+===
+
+Not only can we limit rows, but we can limit columns (and put them in the order listed) using `select`. 
+
+```{r}
+yugoslavia %>% select(country, year, pop) %>% head(4)
+```
+
+
+Dropping columns: select
+===
+
+We can instead drop columns with `select` using `-` signs:
+
+```{r}
+yugoslavia %>% select(-continent, -pop, -lifeExp) %>% head(4)
+```
+
+
+Helper functions for select
+===
+
+`select()` has a variety of helper functions like `starts_with`, `ends_with`, and `contains`. These are very useful if you have a "wide" data frame with column names following a pattern! See `?select`.
+
+![Obama college scorecard example](images/scorecarddata.png)
+
+(US Dept. of Education "College Scorecard" data: > 100 columns)
+
+
+Renaming columns with select
+===
+
+We can rename columns using `select`, but we will drop everything that isn't mentioned:
+
+```{r}
+yugoslavia %>%
+    select(year, Life_Expectancy = lifeExp) %>%
+    head(4)
+```
+
+
+Better: rename columns with rename
+===
+
+```{r}
+yugoslavia %>%
+    select(country, year, lifeExp) %>%
+    rename(Country = country, Year = year,
+           Life_Expectancy = lifeExp) %>%
+    head(4)
+```
+
+
+Column naming practices
+===
+incremental: true
+
+- *Good* column names will be self-describing. Don't use inscrutable abbreviations to save effort. RStudio's autocompleting functions take away the pain of long variable names: hit tab while typing code.
+
+- *Valid* "naked" column names can contain upper or lowercase letters, numbers, periods, and underscores. They must start with a letter or period and not be a special reserved word (e.g. `TRUE`, `if`)
+
+- Names are case-sensitive: `Year` and `year` are not the same thing!
+
+- You can include spaces or use reserved words if you put backticks around the name. This is good to do when preparing data for `ggplot2` or output in `pander` tables since you don't have to rename axes or headings.
+
+
+Column name with space example
+===
+
+```{r}
+library(pander)
+yugoslavia %>%
+    filter(country == "Serbia") %>%
+    select(year, lifeExp) %>%
+    rename(Year = year, `Life Expectancy` = lifeExp) %>%
+    head(5) %>%
+    pander(style = "rmarkdown", caption = "Serbian life expectancy")
+```
+
+
+Create new columns: mutate
+===
+
+Thing you often do in a spreadsheet: add a new column to your existing data and populate it down.
+
+![Dragging down formula in Excel](http://www.aatcomment.org.uk/wp-content/uploads/2014/03/Excel-formula-2.png)
+
+`dplyr` way: add new columns to a data frame using `mutate`.
+
+
+mutate example
+===
+
+```{r}
+yugoslavia %>% filter(country == "Serbia") %>%
+    select(year, pop, lifeExp) %>%
+    mutate(pop_million = pop / 1000000,
+           life_exp_past_40 = lifeExp - 40) %>%
+    head(5)
+```
+
+
+ifelse()
+===
+
+A common function used in `mutate` (and in general in R programming) is `ifelse()`. This lets you create a new column using logical tests.
+
+```{r}
+yugoslavia %>%
+    mutate(short_country = ifelse(country == "Bosnia and Herzegovina", "B and H", as.character(country))) %>%
+    select(short_country, year, pop) %>%
+    arrange(year, short_country) %>%
+    head(3)
+```
+
+Summarizing with dplyr
+===
+type: section
+
+
+General aggregation: summarize
+===
+
+`summarize` takes all your rows of data and does something across them, like count how many there are, take the mean, etc. You can use any function here that aggregates over multiple values into a single one (like `sd`).
+
+summarize_each()
+
+
+Sampling rows: sample_n
+===
+
+You can randomly sample rows using `sample_n` or `sample_frac`, which is a good idea if you have many observations and want to test something. Can do this with replacement for bootstrapping.
+
+
+Splitting data into groups: group_by
+===
+
+The special function `group_by` changes how functions operate on the data, more importantly `summarize`. These operations are performed within each group as defined by the variables, rather than on all rows at once.
+
+Typically the variables you group by will be integers, factors, or characters. More error prone with continuous real values.
+
+Use `ungroup` to drop the grouping (e.g if you want to be summarizing on a new level).
+
+
+Window functions
+===
+
+leads and lags, ranks, cumulative sums. You can do these with manual looping (soon) but this is faster.
+
+
+Lab break!
+===
+
+Practice making new columns on the `gapminder` data. Summarize these or existing columns with some interesting grouping (year, continent, country).
+
+
+Joining data frames
+===
+type: section
+
+
+Joining: conceptually
+===
+
+We need to think about the following when we want to merge two data frames:
+
+* What determines a match?
+* Which rows are we keeping?
+
+
+Matching criteria
+===
+
+Usually, we determine that rows should match because they have some columns containing the same value.
+
+
+Types of joins
+===
+
+* Inner join
+* Left join
+* Right join
+* Full join
+
+
+Lab break!
+===
+
+Practice some joins on the airplane data.
+
+
+Homework
+===
+type: section
+
+Pick some relationship to look at in the Gapminder data (e.g. changes in life expectancy over time) and write up a .Rmd file describing `ggplot2` visualizations used to investigate that question. You can choose to work with a subset of the data (e.g. just African countries). Upload both the .Rmd file and the .html file to Canvas.
+
+You should include somewhere between 4 and 8 graphs. All titles, axes, and legends should be labelled clearly (not raw variable names). You must have at least one graph with `facet_wrap` or `facet_grid`. You must include at least one manually specified legend. You can go beyond the `geoms` covered today if you want to make histograms, bar charts, add vertical or horizontal lines, etc.
+
+Your document should be pleasant for a peer to look at, with some organization. You must write up your observations in words as well as showing the graphs. Use chunk options `echo` and `results` to limit the code/output you show in the .html.
+
+
+Grading rubric
+===
+
+* 0: Didn't turn anything in
+* 1: Turned in but low effort, ignoring many directions
+* 2: Decent effort, followed directions with some minor issues
+* 3: Nailed it
