@@ -137,10 +137,35 @@ yugoslavia %>% lm(pop ~ year, data = .)
 ```
 
 
+Sampling rows: sample_n
+===
+
+Maybe we want to filter *at random* to work with a smaller dataset. You can randomly sample rows with or without replacement using `sample_n` or `sample_frac`.
+
+
+```r
+set.seed(0413) # makes random numbers repeatable
+yugoslavia %>% sample_n(size = 6, replace = FALSE)
+```
+
+```
+Source: local data frame [6 x 6]
+
+     country continent  year lifeExp     pop gdpPercap
+      (fctr)    (fctr) (int)   (dbl)   (int)     (dbl)
+1 Montenegro    Europe  1962  63.728  474528  4649.594
+2 Montenegro    Europe  1982  74.101  562548 11222.588
+3     Serbia    Europe  1962  64.531 7616060  6289.629
+4   Slovenia    Europe  1952  65.570 1489518  4215.042
+5     Serbia    Europe  1952  57.996 6860147  3581.459
+6    Croatia    Europe  1997  73.680 4444595  9875.605
+```
+
+
 Sorting: arrange
 ===
 
-Along with filtering the data to see just certain types of rows, we might want to sort it:
+Along with filtering the data to see certain rows, we might want to sort it:
 
 
 ```r
@@ -223,7 +248,7 @@ Helper functions for select
 Renaming columns with select
 ===
 
-We can rename columns using `select`, but we will drop everything that isn't mentioned:
+We can rename columns using `select`, but that drops everything that isn't mentioned:
 
 
 ```r
@@ -244,22 +269,21 @@ Source: local data frame [4 x 2]
 ```
 
 
-Better: rename columns with rename
+Safer: rename columns with...rename
 ===
 
 
 ```r
 yugoslavia %>%
     select(country, year, lifeExp) %>%
-    rename(Country = country, Year = year,
-           Life_Expectancy = lifeExp) %>%
+    rename(Life_Expectancy = lifeExp) %>%
     head(4)
 ```
 
 ```
 Source: local data frame [4 x 3]
 
-                 Country  Year Life_Expectancy
+                 country  year Life_Expectancy
                   (fctr) (int)           (dbl)
 1 Bosnia and Herzegovina  1952           53.82
 2 Bosnia and Herzegovina  1957           58.45
@@ -274,11 +298,11 @@ incremental: true
 
 - *Good* column names will be self-describing. Don't use inscrutable abbreviations to save effort. RStudio's autocompleting functions take away the pain of long variable names: hit tab while typing code.
 
-- *Valid* "naked" column names can contain upper or lowercase letters, numbers, periods, and underscores. They must start with a letter or period and not be a special reserved word (e.g. `TRUE`, `if`)
+- *Valid* "naked" column names can contain upper or lowercase letters, numbers, periods, and underscores. They must start with a letter or period and not be a special reserved word (e.g. `TRUE`, `if`).
 
 - Names are case-sensitive: `Year` and `year` are not the same thing!
 
-- You can include spaces or use reserved words if you put backticks around the name. This is good to do when preparing data for `ggplot2` or output in `pander` tables since you don't have to rename axes or headings.
+- You can include spaces or use reserved words if you put backticks around the name. Spaces can be worth including when preparing data for `ggplot2` or `pander` since you don't have to rename axes or table headings.
 
 
 Column name with space example
@@ -346,7 +370,7 @@ Source: local data frame [5 x 5]
 ifelse()
 ===
 
-A common function used in `mutate` (and in general in R programming) is `ifelse()`. This lets you create a new column using logical tests.
+A common function used in `mutate` (and in general in R programming) is `ifelse()`. This returns a value depending on logical tests.
 
 
 ```r
@@ -367,6 +391,7 @@ Source: local data frame [3 x 3]
 3    Montenegro  1952  413834
 ```
 
+
 Summarizing with dplyr
 ===
 type: section
@@ -375,37 +400,129 @@ type: section
 General aggregation: summarize
 ===
 
-`summarize` takes all your rows of data and does something across them, like count how many there are, take the mean, etc. You can use any function here that aggregates over multiple values into a single one (like `sd`).
+`summarize` takes your rows of data and computes something across them: count how many rows there are, calculate the mean or total, etc. You can use any function that aggregates multiple values into a single one (like `sd`).
 
-summarize_each()
+In a spreadsheet:
+
+![Excel equivalent of summing a column](https://osiprodeusodcspstoa01.blob.core.windows.net/en-us/media/5feb1ba8-a0fb-49d1-8188-dcf1ba878a42.jpg)
 
 
-Sampling rows: sample_n
+Summarize example
 ===
 
-You can randomly sample rows using `sample_n` or `sample_frac`, which is a good idea if you have many observations and want to test something. Can do this with replacement for bootstrapping.
+
+```r
+yugoslavia %>%
+    filter(year == 1982) %>%
+    summarize(n_obs = n(),
+              total_pop = sum(pop),
+              mean_life_exp = mean(lifeExp),
+              range_life_exp = max(lifeExp) - min(lifeExp))
+```
+
+```
+Source: local data frame [1 x 4]
+
+  n_obs total_pop mean_life_exp range_life_exp
+  (int)     (int)         (dbl)          (dbl)
+1     5  20042685       71.2952          3.939
+```
+
+
+Avoiding repetition: summarize_each()
+===
+
+Maybe you need to calculate the mean and standard deviation of a bunch of columns. With `summarize_each()`, you put the functions to use in a `funs()` list, and the variables to compute over after that (like `select` syntax).
+
+
+```r
+yugoslavia %>%
+    filter(year == 1982) %>%
+    summarize_each(funs(mean, sd),
+                   lifeExp, pop)
+```
+
+```
+Source: local data frame [1 x 4]
+
+  lifeExp_mean pop_mean lifeExp_sd  pop_sd
+         (dbl)    (dbl)      (dbl)   (dbl)
+1      71.2952  4008537   1.602685 3237282
+```
 
 
 Splitting data into groups: group_by
 ===
 
-The special function `group_by` changes how functions operate on the data, more importantly `summarize`. These operations are performed within each group as defined by the variables, rather than on all rows at once.
+The special function `group_by()` changes how functions operate on the data, most importantly `summarize`. These functions are computed *within each group* as defined by variables given, rather than over all rows at once. Typically the variables you group by will be integers, factors, or characters, and not continuous real values.
 
-Typically the variables you group by will be integers, factors, or characters. More error prone with continuous real values.
+Excel analogue: pivot tables
 
-Use `ungroup` to drop the grouping (e.g if you want to be summarizing on a new level).
+![Pivot table](http://www.excel-easy.com/data-analysis/images/pivot-tables/two-dimensional-pivot-table.png)
+
+
+group_by() example
+===
+
+
+
+```r
+yugoslavia %>%
+    group_by(year) %>%
+    summarize(num_countries = n_distinct(country),
+              total_pop = sum(pop),
+              total_gdp_per_cap = sum(pop * gdpPercap) /
+                  total_pop) %>%
+    head(5)
+```
+
+```
+Source: local data frame [5 x 4]
+
+   year num_countries total_pop total_gdp_per_cap
+  (int)         (int)     (int)             (dbl)
+1  1952             5  15436728          3029.794
+2  1957             5  16314276          4187.491
+3  1962             5  17099107          5256.578
+4  1967             5  17878535          6655.827
+5  1972             5  18579786          8730.215
+```
 
 
 Window functions
 ===
 
-leads and lags, ranks, cumulative sums. You can do these with manual looping (soon) but this is faster.
+Grouping can also be used with `mutate` or `filter` to give rank orders within a group, lagged values, and cumulative sums. Much more on window functions is in a [vignette](https://cran.r-project.org/web/packages/dplyr/vignettes/window-functions.html).
+
+
+```r
+yugoslavia %>% select(country, year, pop) %>%
+    filter(year >= 2002) %>% group_by(country) %>%
+    mutate(lag_pop = lag(pop, order_by = year),
+           pop_change = pop - lag_pop) %>% head(4)
+```
+
+```
+Source: local data frame [4 x 5]
+Groups: country [2]
+
+                 country  year     pop lag_pop pop_change
+                  (fctr) (int)   (int)   (int)      (int)
+1 Bosnia and Herzegovina  2002 4165416      NA         NA
+2 Bosnia and Herzegovina  2007 4552198 4165416     386782
+3                Croatia  2002 4481020      NA         NA
+4                Croatia  2007 4493312 4481020      12292
+```
 
 
 Lab break!
 ===
 
-Practice making new columns on the `gapminder` data. Summarize these or existing columns with some interesting grouping (year, continent, country).
+With the Gapminder data, practice the following analyses:
+
+* Find the population (in units of millions of people) in 2007 for countries in Asia. Make a histogram.
+* Use population and GDP per capita to find the 10 largest economies in 1952 as measured by overall GDP (not per capita).
+* For each country and each year, find the percentage growth of the population relative to the population of the country 5 years prior (the Gapminder data are reported every 5 years). Then find the 10 country-year pairs that had the highest percentage growth relative to 5 years prior, and the 10 country-year pairs that had the lowest percentage growth.
 
 
 Joining data frames
@@ -413,28 +530,55 @@ Joining data frames
 type: section
 
 
+When do we need to join tables?
+===
+
+* Want to make columns using criteria too complicated for `ifelse()`
+* Combine data stored in separate places: e.g. student demographic information with student homework grades
+
+Excel equivalents: `VLOOKUP`, `MATCH`
+
+![VLOOKUP example](http://www.systemfunda.com/wp-content/uploads/2013/11/EXCEL_VLOOKUP.jpg)
+
+
 Joining: conceptually
 ===
 
-We need to think about the following when we want to merge two data frames:
+We need to think about the following when we want to merge data frames `A` and `B`:
 
-* What determines a match?
-* Which rows are we keeping?
-
-
-Matching criteria
-===
-
-Usually, we determine that rows should match because they have some columns containing the same value.
+* Which rows are we keeping from each data frame?
+* Which columns are we keeping from each data frame?
+* Which variables determine whether rows match?
 
 
 Types of joins
 ===
 
-* Inner join
-* Left join
-* Right join
-* Full join
+* `A %>% inner_join(B)`: keep rows from `A` that match rows in `B`, columns from both `A` and `B`
+* `A %>% left_join(B)`: keep all rows from `A`, matched with `B` wherever possible (`NA` when not), columns from both `A` and `B`
+* `A %>% right_join(B)`: keep all rows from `B`, matched with `A` wherever possible (`NA` when not), columns from both `A` and `B`
+* `A %>% full_join(B)`: keep all rows from either `A` or `B`, matched wherever possible (`NA` when not), columns from both `A` and `B`
+* `A %>% semi_join(B)`: keep rows from `A` that match rows in `B`, columns from just `A`
+* `A %>% anti_join(B)`: keep rows from `A` that *don't* match a row in `B`, columns from just `A`
+
+
+Matching criteria
+===
+
+Usually, we determine that rows should match because they have some columns containing the same value. We list these in a `by = ` argument to the join
+
+* No `by`: matches using all variables in `A` and `B` that have identical names
+* `by = c("var1", "var2", "var3")`: matches on identical values of `var1`, `,var2`, `var3` in both `A` and `B`
+* `by = c("Avar1" = "Bvar1", "Avar2" = "Bvar2")`: matches identical values of `Avar1` variable in `A` to `Bvar1` variable in `B`, and `Avar2` variable in `A` to `Bvar2` variable in `B`
+
+(Need to get more complicated? You'll want to learn SQL.)
+
+
+Join examples
+===
+
+flight data
+
 
 
 Lab break!
