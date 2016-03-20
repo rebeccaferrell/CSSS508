@@ -133,15 +133,10 @@ type: section
 Base plots from last week
 ===
 
-```{r, eval=FALSE}
+```{r, fig.width=20}
 plot(lifeExp ~ year, data = China, xlab = "Year", ylab = "Life expectancy", main = "Life expectancy in China", col = "red", cex = 3, pch = 16)
 ```
 
-***
-
-```{r, echo=FALSE}
-plot(lifeExp ~ year, data = China, xlab = "Year", ylab = "Life expectancy", main = "Life expectancy in China", col = "red", cex = 3, pch = 16)
-```
 
 ggplot2
 ===
@@ -157,44 +152,20 @@ The core idea underlying this package is the **grammar of graphics**: we can bre
 
 Chinese life expectancy in ggplot
 ===
-left: 60%
 
-```{r, eval=FALSE}
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
+```{r, fig.width = 10, fig.height = 4.1, dpi=300, out.width="1100px", out.height="450px"}
+ggplot(data = China, aes(x = year, y = lifeExp)) +
     geom_point()
 ```
 
-***
-
-```{r, echo=FALSE}
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
-    geom_point()
-```
 
 Axis labels, points, no gray background
 ===
-left: 60%
 
-```{r, eval=FALSE}
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
+```{r, fig.width = 10, fig.height = 3.6, dpi=300, out.width="1100px", out.height="400px"}
+ggplot(data = China, aes(x = year, y = lifeExp)) +
     geom_point(color = "red", size = 5) +
-    xlab("Year") +
-    ylab("Life expectancy") +
-    ggtitle("Life expectancy in China") +
-    theme_bw()
-```
-
-***
-
-```{r, echo=FALSE}
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
-    geom_point(color = "red", size = 5) +
-    xlab("Year") +
-    ylab("Life expectancy") +
+    xlab("Year") + ylab("Life expectancy") +
     ggtitle("Life expectancy in China") +
     theme_bw()
 ```
@@ -202,61 +173,26 @@ ggplot(data = China,
 
 Color observations by some attribute
 ===
-left: 60%
 
-```{r, eval=FALSE}
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp, color = continent)) +
+```{r, fig.width = 10, fig.height = 3.6, dpi=300, out.width="1100px", out.height="400px"}
+ggplot(data = gapminder, aes(x = year, y = lifeExp, color = continent)) +
     geom_point() +
-    xlab("Year") +
-    ylab("Life expectancy") +
+    xlab("Year") + ylab("Life expectancy") +
     ggtitle("Life expectancy over time") +
     theme_bw()
 ```
-
-***
-
-```{r, echo=FALSE}
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp, color = continent)) +
-    geom_point() +
-    xlab("Year") +
-    ylab("Life expectancy") +
-    ggtitle("Life expectancy over time") +
-    theme_bw()
-```
-
 
 Segment observations by some attribute
 ===
-left: 60%
 
-```{r, eval=FALSE}
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp,
-           group = country, color = continent)) +
+```{r, fig.width = 10, fig.height = 3.2, dpi=300, out.width="1100px", out.height="350px"}
+ggplot(data = gapminder, aes(x = year, y = lifeExp, group = country, color = continent)) +
     geom_line(alpha = 0.5) +
     facet_wrap( ~ continent) +
-    xlab("Year") +
-    ylab("Life expectancy") +
+    xlab("Year") + ylab("Life expectancy") +
     ggtitle("Life expectancy over time") +
     theme_bw()
 ```
-
-***
-
-```{r, echo=FALSE}
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp,
-           group = country, color = continent)) +
-    geom_line(alpha = 0.5) +
-    facet_wrap( ~ continent) +
-    xlab("Year") +
-    ylab("Life expectancy") +
-    ggtitle("Life expectancy over time") +
-    theme_bw()
-```
-
 
 Layers
 ===
@@ -320,7 +256,7 @@ The graph won't be displayed when you do this. You can show the graph using a si
 Showing a stored graph
 ===
 
-```{r}
+```{r, fig.width = 10, fig.height = 4.5, dpi=300, out.width="1100px", out.height="500px"}
 lifeExp_by_year
 ```
 
@@ -328,20 +264,11 @@ lifeExp_by_year
 
 Adding a layer: lines connecting each country
 ===
-left: 40%
 
-```{r, eval=FALSE}
+```{r, fig.width = 10, fig.height = 5, dpi=300, out.width="1100px", out.height="550px"}
 lifeExp_by_year +
     geom_line(aes(group = country))
 ```
-
-***
-
-```{r, echo=FALSE}
-lifeExp_by_year +
-    geom_line(aes(group = country))
-```
-
 
 
 Lab break!
@@ -357,43 +284,20 @@ Some other options:
 
 Common scatterplot problem: overplotting
 ===
-left: 40%
 
-```{r, eval=FALSE}
-ggplot(data = gapminder,
-       aes(x = continent, y = year, color = continent)) +
-    geom_point()
-```
-
-***
-
-```{r, echo=FALSE}
-ggplot(data = gapminder,
-       aes(x = continent, y = year, color = continent)) +
+```{r, fig.width = 10, fig.height = 4.5, dpi=300, out.width="1100px", out.height="500px"}
+ggplot(data = gapminder, aes(x = continent, y = year, color = continent)) +
     geom_point()
 ```
 
 
 Fixing overplotting with jitter
 ===
-left: 40%
 
-```{r, eval=FALSE}
-ggplot(data = gapminder,
-       aes(x = continent, y = year, color = continent)) +
-    geom_point(position = position_jitter(width = 0.5,
-                                          height = 2))
+```{r, fig.width = 10, fig.height = 4.1, dpi=300, out.width="1100px", out.height="450px"}
+ggplot(data = gapminder, aes(x = continent, y = year, color = continent)) +
+    geom_point(position = position_jitter(width = 0.5, height = 2))
 ```
-
-***
-
-```{r, echo=FALSE}
-ggplot(data = gapminder,
-       aes(x = continent, y = year, color = continent)) +
-    geom_point(position = position_jitter(width = 0.5,
-                                          height = 2))
-```
-
 
 
 Changing the axes
@@ -408,22 +312,9 @@ We can modify the axes in a variety of ways, such as:
 
 Axis changes
 ===
-left: 40%
 
-```{r, eval=FALSE}
-ggplot(data = China,
-       aes(x = year, y = gdpPercap)) +
-    geom_line() +
-    scale_y_log10(breaks = c(1000, 2000, 3000, 4000, 5000)) +
-    xlim(1940, 2010) +
-    ggtitle("Chinese GDP per capita")
-```
-
-***
-
-```{r, echo=FALSE}
-ggplot(data = China,
-       aes(x = year, y = gdpPercap)) +
+```{r, fig.width = 10, fig.height = 3.2, dpi=300, out.width="1100px", out.height="350px"}
+ggplot(data = China, aes(x = year, y = gdpPercap)) +
     geom_line() +
     scale_y_log10(breaks = c(1000, 2000, 3000, 4000, 5000)) +
     xlim(1940, 2010) +
@@ -433,21 +324,9 @@ ggplot(data = China,
 
 Fonts too small?
 ===
-left: 40%
 
-```{r, eval=FALSE}
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
-    geom_line() +
-    ggtitle("Chinese life expectancy") +
-    theme_gray(base_size = 30)
-```
-
-***
-
-```{r, echo=FALSE}
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
+```{r, fig.width = 10, fig.height = 4.1, dpi=300, out.width="1100px", out.height="450px"}
+ggplot(data = China, aes(x = year, y = lifeExp)) +
     geom_line() +
     ggtitle("Chinese life expectancy") +
     theme_gray(base_size = 30)
@@ -483,28 +362,10 @@ When confused...Google it!
 
 Legend name and manual color scales
 ===
-left: 50%
 
-```{r, eval=FALSE}
+```{r, fig.width = 10, fig.height = 4.1, dpi=300, out.width="1100px", out.height="450px"}
 lifeExp_by_year +
-    scale_color_manual(name = "Which\ncontinent\nare we\nlooking at?",
-                       values = c("Africa" = "seagreen",
-                                  "Americas" = "turquoise1",
-                                  "Asia" = "royalblue",
-                                  "Europe" = "violetred1",
-                                  "Oceania" = "yellow"))
-```
-
-***
-
-```{r, echo=FALSE}
-lifeExp_by_year +
-    scale_color_manual(name = "Which\ncontinent\nare we\nlooking at?",
-                       values = c("Africa" = "seagreen",
-                                  "Americas" = "turquoise1",
-                                  "Asia" = "royalblue",
-                                  "Europe" = "violetred1",
-                                  "Oceania" = "yellow"))
+    scale_color_manual(name = "Which\ncontinent\nare we\nlooking at?", values = c("Africa" = "seagreen", "Americas" = "turquoise1", "Asia" = "royalblue", "Europe" = "violetred1", "Oceania" = "yellow"))
 ```
 
 
@@ -512,33 +373,27 @@ Fussy manual legend example code
 ===
 
 ```{r, eval=FALSE}
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp, group = country)) +
+ggplot(data = gapminder, aes(x = year, y = lifeExp, group = country)) +
     geom_line(alpha = 0.5, aes(color = "Country", size = "Country")) +
-    geom_line(stat = "smooth", method = "loess",
-              aes(group = continent, color = "Continent",
-                  size = "Continent"), alpha = 0.5) +
+    geom_line(stat = "smooth", method = "loess", aes(group = continent, color = "Continent", size = "Continent"), alpha = 0.5) +
     facet_wrap(~ continent, nrow = 2) +
     scale_color_manual(name = "Unit", values = c("Country" = "black", "Continent" = "dodgerblue1")) +
     scale_size_manual(name = "Unit", values = c("Country" = 1, "Continent" = 3)) +
-    theme_minimal(base_size = 20) + 
+    theme_minimal(base_size = 16) + 
     theme(legend.position=c(0.75, 0.2))
 ```
 
 Fussy manual legend example result!
 ===
 
-```{r, echo=FALSE, fig.width=16}
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp, group = country)) +
+```{r, echo=FALSE, fig.width = 10, fig.height = 4.5, dpi=300, out.width="1100px", out.height="500px"}
+ggplot(data = gapminder, aes(x = year, y = lifeExp, group = country)) +
     geom_line(alpha = 0.5, aes(color = "Country", size = "Country")) +
-    geom_line(stat = "smooth", method = "loess",
-              aes(group = continent, color = "Continent",
-                  size = "Continent"), alpha = 0.5) +
+    geom_line(stat = "smooth", method = "loess", aes(group = continent, color = "Continent", size = "Continent"), alpha = 0.5) +
     facet_wrap(~ continent, nrow = 2) +
     scale_color_manual(name = "Unit", values = c("Country" = "black", "Continent" = "dodgerblue1")) +
     scale_size_manual(name = "Unit", values = c("Country" = 1, "Continent" = 3)) +
-    theme_minimal(base_size = 20) + 
+    theme_minimal(base_size = 16) + 
     theme(legend.position=c(0.75, 0.2))
 ```
 

@@ -208,9 +208,8 @@ Base plots from last week
 plot(lifeExp ~ year, data = China, xlab = "Year", ylab = "Life expectancy", main = "Life expectancy in China", col = "red", cex = 3, pch = 16)
 ```
 
-***
+![plot of chunk unnamed-chunk-7](slides_week_2-figure/unnamed-chunk-7-1.png) 
 
-![plot of chunk unnamed-chunk-8](slides_week_2-figure/unnamed-chunk-8-1.png) 
 
 ggplot2
 ===
@@ -227,80 +226,59 @@ The core idea underlying this package is the **grammar of graphics**: we can bre
 
 Chinese life expectancy in ggplot
 ===
-left: 60%
 
 
 ```r
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
+ggplot(data = China, aes(x = year, y = lifeExp)) +
     geom_point()
 ```
 
-***
+<img src="slides_week_2-figure/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" width="1100px" height="450px" />
 
-![plot of chunk unnamed-chunk-11](slides_week_2-figure/unnamed-chunk-11-1.png) 
 
 Axis labels, points, no gray background
 ===
-left: 60%
 
 
 ```r
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
+ggplot(data = China, aes(x = year, y = lifeExp)) +
     geom_point(color = "red", size = 5) +
-    xlab("Year") +
-    ylab("Life expectancy") +
+    xlab("Year") + ylab("Life expectancy") +
     ggtitle("Life expectancy in China") +
     theme_bw()
 ```
 
-***
-
-![plot of chunk unnamed-chunk-13](slides_week_2-figure/unnamed-chunk-13-1.png) 
+<img src="slides_week_2-figure/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" width="1100px" height="400px" />
 
 
 Color observations by some attribute
 ===
-left: 60%
 
 
 ```r
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp, color = continent)) +
+ggplot(data = gapminder, aes(x = year, y = lifeExp, color = continent)) +
     geom_point() +
-    xlab("Year") +
-    ylab("Life expectancy") +
+    xlab("Year") + ylab("Life expectancy") +
     ggtitle("Life expectancy over time") +
     theme_bw()
 ```
 
-***
-
-![plot of chunk unnamed-chunk-15](slides_week_2-figure/unnamed-chunk-15-1.png) 
-
+<img src="slides_week_2-figure/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" width="1100px" height="400px" />
 
 Segment observations by some attribute
 ===
-left: 60%
 
 
 ```r
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp,
-           group = country, color = continent)) +
+ggplot(data = gapminder, aes(x = year, y = lifeExp, group = country, color = continent)) +
     geom_line(alpha = 0.5) +
     facet_wrap( ~ continent) +
-    xlab("Year") +
-    ylab("Life expectancy") +
+    xlab("Year") + ylab("Life expectancy") +
     ggtitle("Life expectancy over time") +
     theme_bw()
 ```
 
-***
-
-![plot of chunk unnamed-chunk-17](slides_week_2-figure/unnamed-chunk-17-1.png) 
-
+<img src="slides_week_2-figure/unnamed-chunk-12-1.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" width="1100px" height="350px" />
 
 Layers
 ===
@@ -370,13 +348,12 @@ Showing a stored graph
 lifeExp_by_year
 ```
 
-![plot of chunk unnamed-chunk-19](slides_week_2-figure/unnamed-chunk-19-1.png) 
+<img src="slides_week_2-figure/unnamed-chunk-14-1.png" title="plot of chunk unnamed-chunk-14" alt="plot of chunk unnamed-chunk-14" width="1100px" height="500px" />
 
 
 
 Adding a layer: lines connecting each country
 ===
-left: 40%
 
 
 ```r
@@ -384,10 +361,7 @@ lifeExp_by_year +
     geom_line(aes(group = country))
 ```
 
-***
-
-![plot of chunk unnamed-chunk-21](slides_week_2-figure/unnamed-chunk-21-1.png) 
-
+<img src="slides_week_2-figure/unnamed-chunk-15-1.png" title="plot of chunk unnamed-chunk-15" alt="plot of chunk unnamed-chunk-15" width="1100px" height="550px" />
 
 
 Lab break!
@@ -403,36 +377,26 @@ Some other options:
 
 Common scatterplot problem: overplotting
 ===
-left: 40%
 
 
 ```r
-ggplot(data = gapminder,
-       aes(x = continent, y = year, color = continent)) +
+ggplot(data = gapminder, aes(x = continent, y = year, color = continent)) +
     geom_point()
 ```
 
-***
-
-![plot of chunk unnamed-chunk-23](slides_week_2-figure/unnamed-chunk-23-1.png) 
+<img src="slides_week_2-figure/unnamed-chunk-16-1.png" title="plot of chunk unnamed-chunk-16" alt="plot of chunk unnamed-chunk-16" width="1100px" height="500px" />
 
 
 Fixing overplotting with jitter
 ===
-left: 40%
 
 
 ```r
-ggplot(data = gapminder,
-       aes(x = continent, y = year, color = continent)) +
-    geom_point(position = position_jitter(width = 0.5,
-                                          height = 2))
+ggplot(data = gapminder, aes(x = continent, y = year, color = continent)) +
+    geom_point(position = position_jitter(width = 0.5, height = 2))
 ```
 
-***
-
-![plot of chunk unnamed-chunk-25](slides_week_2-figure/unnamed-chunk-25-1.png) 
-
+<img src="slides_week_2-figure/unnamed-chunk-17-1.png" title="plot of chunk unnamed-chunk-17" alt="plot of chunk unnamed-chunk-17" width="1100px" height="450px" />
 
 
 Changing the axes
@@ -447,39 +411,31 @@ We can modify the axes in a variety of ways, such as:
 
 Axis changes
 ===
-left: 40%
 
 
 ```r
-ggplot(data = China,
-       aes(x = year, y = gdpPercap)) +
+ggplot(data = China, aes(x = year, y = gdpPercap)) +
     geom_line() +
     scale_y_log10(breaks = c(1000, 2000, 3000, 4000, 5000)) +
     xlim(1940, 2010) +
     ggtitle("Chinese GDP per capita")
 ```
 
-***
-
-![plot of chunk unnamed-chunk-27](slides_week_2-figure/unnamed-chunk-27-1.png) 
+<img src="slides_week_2-figure/unnamed-chunk-18-1.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" width="1100px" height="350px" />
 
 
 Fonts too small?
 ===
-left: 40%
 
 
 ```r
-ggplot(data = China,
-       aes(x = year, y = lifeExp)) +
+ggplot(data = China, aes(x = year, y = lifeExp)) +
     geom_line() +
     ggtitle("Chinese life expectancy") +
     theme_gray(base_size = 30)
 ```
 
-***
-
-![plot of chunk unnamed-chunk-29](slides_week_2-figure/unnamed-chunk-29-1.png) 
+<img src="slides_week_2-figure/unnamed-chunk-19-1.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" width="1100px" height="450px" />
 
 
 Text and tick adjustments
@@ -511,22 +467,14 @@ When confused...Google it!
 
 Legend name and manual color scales
 ===
-left: 50%
 
 
 ```r
 lifeExp_by_year +
-    scale_color_manual(name = "Which\ncontinent\nare we\nlooking at?",
-                       values = c("Africa" = "seagreen",
-                                  "Americas" = "turquoise1",
-                                  "Asia" = "royalblue",
-                                  "Europe" = "violetred1",
-                                  "Oceania" = "yellow"))
+    scale_color_manual(name = "Which\ncontinent\nare we\nlooking at?", values = c("Africa" = "seagreen", "Americas" = "turquoise1", "Asia" = "royalblue", "Europe" = "violetred1", "Oceania" = "yellow"))
 ```
 
-***
-
-![plot of chunk unnamed-chunk-31](slides_week_2-figure/unnamed-chunk-31-1.png) 
+<img src="slides_week_2-figure/unnamed-chunk-20-1.png" title="plot of chunk unnamed-chunk-20" alt="plot of chunk unnamed-chunk-20" width="1100px" height="450px" />
 
 
 Fussy manual legend example code
@@ -534,23 +482,20 @@ Fussy manual legend example code
 
 
 ```r
-ggplot(data = gapminder,
-       aes(x = year, y = lifeExp, group = country)) +
+ggplot(data = gapminder, aes(x = year, y = lifeExp, group = country)) +
     geom_line(alpha = 0.5, aes(color = "Country", size = "Country")) +
-    geom_line(stat = "smooth", method = "loess",
-              aes(group = continent, color = "Continent",
-                  size = "Continent"), alpha = 0.5) +
+    geom_line(stat = "smooth", method = "loess", aes(group = continent, color = "Continent", size = "Continent"), alpha = 0.5) +
     facet_wrap(~ continent, nrow = 2) +
     scale_color_manual(name = "Unit", values = c("Country" = "black", "Continent" = "dodgerblue1")) +
     scale_size_manual(name = "Unit", values = c("Country" = 1, "Continent" = 3)) +
-    theme_minimal(base_size = 20) + 
+    theme_minimal(base_size = 16) + 
     theme(legend.position=c(0.75, 0.2))
 ```
 
 Fussy manual legend example result!
 ===
 
-![plot of chunk unnamed-chunk-33](slides_week_2-figure/unnamed-chunk-33-1.png) 
+<img src="slides_week_2-figure/unnamed-chunk-22-1.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" width="1100px" height="500px" />
 
 Observation: one could use `filter` to identify the countries with dips in life expectancy and investigate.
 
