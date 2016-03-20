@@ -44,7 +44,7 @@ Excel analogue:
 %in%
 ===
 
-Common use case: want to filter rows to things in some set. The `c()` function (**c**ombine, **c**oncatenate) is how we make **vectors** in R, which is an important data type. We'll talk more about those next week.
+Common use case: want to filter rows to things in some set. The `c()` function (**c**ombine, **c**oncatenate) is how we make **vectors** in R, which is an important data type. (We'll talk more about those next week.)
 
 
 ```r
@@ -97,7 +97,7 @@ gapminder %>% distinct(continent, year)
 Time to talk about pipes (%>%)
 ===
 
-The `dplyr` package makes use of an operator (not native to R) called a **pipe**. We write pipes like `%>%` (*Cntl-Shift-M*). Pipes take the object on the left and apply the function on the right to them. Read out loud: "and then..."
+The `dplyr` package makes use of an operator (not native to R) called a **pipe**. We write pipes like `%>%` (*Cntl-Shift-M*). Pipes take the object on the left and apply the function on the right: `x %>% f(y) = f(x, y)`. Read out loud: "and then..."
 
 
 ```r
@@ -238,7 +238,7 @@ Source: local data frame [4 x 3]
 Helper functions for select
 ===
 
-`select()` has a variety of helper functions like `starts_with`, `ends_with`, and `contains`. These are very useful if you have a "wide" data frame with column names following a pattern! See `?select`.
+`select()` has a variety of helper functions like `starts_with`, `ends_with`, and `contains`, or giving a range of continguous columns `startvar:endvar`. These are very useful if you have a "wide" data frame with column names following a pattern or ordering. See `?select`.
 
 ![Obama college scorecard example](images/scorecarddata.png)
 
@@ -332,14 +332,14 @@ yugoslavia %>%
 Table: Serbian life expectancy
 
 
-Create new columns: mutate
+Create new columns: mutate and transmute
 ===
 
-Thing you often do in a spreadsheet: add a new column to your existing data and populate it down.
+Thing you do in spreadsheets: add new column to your existing data, drag down.
 
 ![Dragging down formula in Excel](http://www.aatcomment.org.uk/wp-content/uploads/2014/03/Excel-formula-2.png)
 
-`dplyr` way: add new columns to a data frame using `mutate`.
+`dplyr` way: add new columns to a data frame using `mutate`. (Add new columns and drop old ones using `transmute`.)
 
 
 mutate example
@@ -570,6 +570,8 @@ Usually, we determine that rows should match because they have some columns cont
 * No `by`: matches using all variables in `A` and `B` that have identical names
 * `by = c("var1", "var2", "var3")`: matches on identical values of `var1`, `,var2`, `var3` in both `A` and `B`
 * `by = c("Avar1" = "Bvar1", "Avar2" = "Bvar2")`: matches identical values of `Avar1` variable in `A` to `Bvar1` variable in `B`, and `Avar2` variable in `A` to `Bvar2` variable in `B`
+
+No matter what the `by` criteria are, if there are multiple matches, you'll get one row for each possible one (except with `semi_join` and `anti_join`).
 
 (Need to get more complicated? You'll want to learn SQL.)
 
