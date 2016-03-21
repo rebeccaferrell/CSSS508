@@ -10,9 +10,9 @@ height: 750
 Weaning you off of spreadsheets
 ===
 
-Today we'll talk about `dplyr`: a package that does in R just about any calculation you've tried to do in Excel, but more *transparently*, *reproducibly*, and *safely*.
 
-Don't be the sad research assistant who made this mistake ([Reinhart and Rogoff](http://www.bloomberg.com/news/articles/2013-04-18/faq-reinhart-rogoff-and-the-excel-error-that-changed-history)):
+
+Today we'll talk about `dplyr`: a package that does in R just about any calculation you've tried to do in Excel, but more *transparently*, *reproducibly*, and *safely*. Don't be the sad research assistant who made this mistake ([Reinhart and Rogoff](http://www.bloomberg.com/news/articles/2013-04-18/faq-reinhart-rogoff-and-the-excel-error-that-changed-history)):
 
 ![Reinhart and Rogoff's spreadsheet error](http://rooseveltinstitute.org/wp-content/uploads/styles/large/public/content_images/reinhart_rogoff_coding_error_0.png)
 
@@ -64,33 +64,32 @@ Source: local data frame [2 x 6]
 ```
 
 
-What to include in my vector? Use distinct
+What values are out there? Use distinct
 ===
 
 You can see all the values in your data for columns using `distinct`:
 
 
 ```r
-gapminder %>% distinct(continent)
-```
-
-```
-Source: local data frame [5 x 6]
-
-      country continent  year lifeExp      pop  gdpPercap
-       (fctr)    (fctr) (int)   (dbl)    (int)      (dbl)
-1 Afghanistan      Asia  1952  28.801  8425333   779.4453
-2     Albania    Europe  1952  55.230  1282697  1601.0561
-3     Algeria    Africa  1952  43.077  9279525  2449.0082
-4   Argentina  Americas  1952  62.485 17876956  5911.3151
-5   Australia   Oceania  1952  69.120  8691212 10039.5956
-```
-
-This works for multiple columns too to get all combinations:
-
-
-```r
 gapminder %>% distinct(continent, year)
+```
+
+```
+Source: local data frame [60 x 6]
+
+       country continent  year lifeExp      pop gdpPercap
+        (fctr)    (fctr) (int)   (dbl)    (int)     (dbl)
+1  Afghanistan      Asia  1952  28.801  8425333  779.4453
+2  Afghanistan      Asia  1957  30.332  9240934  820.8530
+3  Afghanistan      Asia  1962  31.997 10267083  853.1007
+4  Afghanistan      Asia  1967  34.020 11537966  836.1971
+5  Afghanistan      Asia  1972  36.088 13079460  739.9811
+6  Afghanistan      Asia  1977  38.438 14880372  786.1134
+7  Afghanistan      Asia  1982  39.854 12881816  978.0114
+8  Afghanistan      Asia  1987  40.822 13867957  852.3959
+9  Afghanistan      Asia  1992  41.674 16317921  649.3414
+10 Afghanistan      Asia  1997  41.763 22227415  635.3414
+..         ...       ...   ...     ...      ...       ...
 ```
 
 
@@ -128,9 +127,9 @@ take_this_data %>%
     do_next_thing(using = that_value) %>% ...
 ```
 
-- The stuff on the left of the pipe is passed to the *first argument* of the function on the right. Other arguments go on the right when we pipe the function. (If you look at `dplyr` documentation where you see functions but not pipes, you see the first argument is always the data.)
+- Stuff to the left of the pipe is passed to the *first argument* of the function on the right. Other arguments go on the right in the function. 
 
-- If you ever find yourself piping a function where the data is not the first argument (as shown on its help page), use `.` in the data argument instead.
+- If you ever find yourself piping a function where the data is not the first argument, use `.` in the data argument instead.
 
 ```r
 yugoslavia %>% lm(pop ~ year, data = .)
@@ -140,7 +139,7 @@ yugoslavia %>% lm(pop ~ year, data = .)
 Sampling rows: sample_n
 ===
 
-Maybe we want to filter *at random* to work with a smaller dataset. You can randomly sample rows with or without replacement using `sample_n` or `sample_frac`.
+We can also filter *at random* to work with a smaller dataset using `sample_n` or `sample_frac`.
 
 
 ```r
@@ -311,8 +310,7 @@ Column name with space example
 
 ```r
 library(pander)
-yugoslavia %>%
-    filter(country == "Serbia") %>%
+yugoslavia %>% filter(country == "Serbia") %>%
     select(year, lifeExp) %>%
     rename(Year = year, `Life Expectancy` = lifeExp) %>%
     head(5) %>%
@@ -335,7 +333,7 @@ Table: Serbian life expectancy
 Create new columns: mutate and transmute
 ===
 
-Thing you do in spreadsheets: add new column to your existing data, drag down.
+Thing you do in spreadsheets: add column to data, drag down.
 
 ![Dragging down formula in Excel](http://www.aatcomment.org.uk/wp-content/uploads/2014/03/Excel-formula-2.png)
 
@@ -429,7 +427,7 @@ Source: local data frame [1 x 4]
 ```
 
 
-Avoiding repetition: summarize_each()
+Avoiding repetition: summarize_each
 ===
 
 Maybe you need to calculate the mean and standard deviation of a bunch of columns. With `summarize_each()`, you put the functions to use in a `funs()` list, and the variables to compute over after that (like `select` syntax).
@@ -467,12 +465,10 @@ group_by() example
 
 
 ```r
-yugoslavia %>%
-    group_by(year) %>%
+yugoslavia %>% group_by(year) %>%
     summarize(num_countries = n_distinct(country),
               total_pop = sum(pop),
-              total_gdp_per_cap = sum(pop * gdpPercap) /
-                  total_pop) %>%
+              total_gdp_per_cap = sum(pop * gdpPercap) / total_pop) %>%
     head(5)
 ```
 
@@ -499,19 +495,19 @@ Grouping can also be used with `mutate` or `filter` to give rank orders within a
 yugoslavia %>% select(country, year, pop) %>%
     filter(year >= 2002) %>% group_by(country) %>%
     mutate(lag_pop = lag(pop, order_by = year),
-           pop_change = pop - lag_pop) %>% head(4)
+           pop_chg = pop - lag_pop) %>% head(4)
 ```
 
 ```
 Source: local data frame [4 x 5]
 Groups: country [2]
 
-                 country  year     pop lag_pop pop_change
-                  (fctr) (int)   (int)   (int)      (int)
-1 Bosnia and Herzegovina  2002 4165416      NA         NA
-2 Bosnia and Herzegovina  2007 4552198 4165416     386782
-3                Croatia  2002 4481020      NA         NA
-4                Croatia  2007 4493312 4481020      12292
+                 country  year     pop lag_pop pop_chg
+                  (fctr) (int)   (int)   (int)   (int)
+1 Bosnia and Herzegovina  2002 4165416      NA      NA
+2 Bosnia and Herzegovina  2007 4552198 4165416  386782
+3                Croatia  2002 4481020      NA      NA
+4                Croatia  2007 4493312 4481020   12292
 ```
 
 
@@ -565,13 +561,13 @@ Types of joins: rows and columns to keep
 Matching criteria
 ===
 
-Usually, we determine that rows should match because they have some columns containing the same value. We list these in a `by = ` argument to the join
+We say rows should match because they have some columns containing the same value. We list these in a `by = ` argument to the join.
 
 * No `by`: matches using all variables in `A` and `B` that have identical names
 * `by = c("var1", "var2", "var3")`: matches on identical values of `var1`, `,var2`, `var3` in both `A` and `B`
 * `by = c("Avar1" = "Bvar1", "Avar2" = "Bvar2")`: matches identical values of `Avar1` variable in `A` to `Bvar1` variable in `B`, and `Avar2` variable in `A` to `Bvar2` variable in `B`
 
-No matter what the `by` criteria are, if there are multiple matches, you'll get one row for each possible one (except with `semi_join` and `anti_join`).
+Note: if there are multiple matches, you'll get one row for each possible combo (except with `semi_join` and `anti_join`).
 
 (Need to get more complicated? You'll want to learn SQL.)
 
@@ -601,8 +597,7 @@ Who manufactures the planes that flew to Seattle?
 
 ```r
 flights %>% filter(dest == "SEA") %>% select(tailnum) %>%
-    left_join(planes %>% select(tailnum, manufacturer),
-              by = "tailnum") %>%
+    left_join(planes %>% select(tailnum, manufacturer), by = "tailnum") %>%
     distinct(manufacturer)
 ```
 
@@ -663,7 +658,7 @@ flights %>% select(origin, year, month, day, hour, dep_delay) %>%
 Wind gusts and delays
 ===
 
-<img src="slides_week_3-figure/unnamed-chunk-25-1.png" title="plot of chunk unnamed-chunk-25" alt="plot of chunk unnamed-chunk-25" width="1100px" height="500px" />
+<img src="slides_week_3-figure/unnamed-chunk-24-1.png" title="plot of chunk unnamed-chunk-24" alt="plot of chunk unnamed-chunk-24" width="1100px" height="600px" />
 
 Redo after removing extreme outliers, just trend
 ===
@@ -683,7 +678,7 @@ flights %>% select(origin, year, month, day, hour, dep_delay) %>%
 Wind gusts and delays: mean trend
 ===
 
-<img src="slides_week_3-figure/unnamed-chunk-27-1.png" title="plot of chunk unnamed-chunk-27" alt="plot of chunk unnamed-chunk-27" width="1100px" height="500px" />
+<img src="slides_week_3-figure/unnamed-chunk-26-1.png" title="plot of chunk unnamed-chunk-26" alt="plot of chunk unnamed-chunk-26" width="1100px" height="600px" />
 
 
 Lab break!
@@ -698,7 +693,7 @@ Some possible questions to investigate:
     + What is the distribution of arrival times for flights leaving NYC over a 24 hour period?
     + Are especially late or early arrivals particular to some regions or airlines?
 
-**Warning!** The `flights` data has 336776 rows, so if you do a badly specified join, you can end up with many matches per observation and have the data blow up.
+**Warning!** `flights` has 336776 rows, so if you do a sloppy join, you can end up with many matches per observation and have the data blow up.
 
 
 Homework
