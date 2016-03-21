@@ -116,7 +116,7 @@ Source: local data frame [2 x 6]
 Pipes save us typing and allow chaining like above, so we use them all the time when manipulating data frames.
 
 
-Piping comments
+Piping
 ===
 incremental: true
 
@@ -130,7 +130,7 @@ take_this_data %>%
 
 - The stuff on the left of the pipe is passed to the *first argument* of the function on the right. Other arguments go on the right when we pipe the function. (If you look at `dplyr` documentation where you see functions but not pipes, you see the first argument is always the data.)
 
-- If you ever find yourself piping a function where the data is not the first argument (as shown in its help page), use `.` in the data argument instead.
+- If you ever find yourself piping a function where the data is not the first argument (as shown on its help page), use `.` in the data argument instead.
 
 ```r
 yugoslavia %>% lm(pop ~ year, data = .)
@@ -253,19 +253,19 @@ We can rename columns using `select`, but that drops everything that isn't menti
 
 ```r
 yugoslavia %>%
-    select(year, Life_Expectancy = lifeExp) %>%
+    select(Life_Expectancy = lifeExp) %>%
     head(4)
 ```
 
 ```
-Source: local data frame [4 x 2]
+Source: local data frame [4 x 1]
 
-   year Life_Expectancy
-  (int)           (dbl)
-1  1952           53.82
-2  1957           58.45
-3  1962           61.93
-4  1967           64.79
+  Life_Expectancy
+            (dbl)
+1           53.82
+2           58.45
+3           61.93
+4           64.79
 ```
 
 
@@ -296,7 +296,7 @@ Column naming practices
 ===
 incremental: true
 
-- *Good* column names will be self-describing. Don't use inscrutable abbreviations to save effort. RStudio's autocompleting functions take away the pain of long variable names: hit tab while typing code.
+- *Good* column names will be self-describing. Don't use inscrutable abbreviations to save typing. RStudio's autocompleting functions take away the pain of long variable names: hit tab while writing code.
 
 - *Valid* "naked" column names can contain upper or lowercase letters, numbers, periods, and underscores. They must start with a letter or period and not be a special reserved word (e.g. `TRUE`, `if`).
 
@@ -534,7 +534,7 @@ When do we need to join tables?
 ===
 
 * Want to make columns using criteria too complicated for `ifelse()`
-* Combine data stored in separate places: e.g. student demographic information with student homework grades
+* Combine data stored in separate places: e.g. UW registrar information with student homework grades
 
 Excel equivalents: `VLOOKUP`, `MATCH`
 
@@ -551,7 +551,7 @@ We need to think about the following when we want to merge data frames `A` and `
 * Which variables determine whether rows match?
 
 
-Types of joins
+Types of joins: rows and columns to keep
 ===
 
 * `A %>% inner_join(B)`: keep rows from `A` that match rows in `B`, columns from both `A` and `B`
@@ -576,28 +576,138 @@ No matter what the `by` criteria are, if there are multiple matches, you'll get 
 (Need to get more complicated? You'll want to learn SQL.)
 
 
-Join examples
+nycflights13 data
 ===
 
-flight data
+We'll use data in the [`nycflights13` package](https://cran.r-project.org/web/packages/nycflights13/nycflights13.pdf). Install and load it:
 
+```r
+# install.packages("nycflights13")
+library(nycflights13)
+```
+
+It includes five tables, some of which contain missing data (`NA`):
+
+* `flights`: flights leaving JFK, LGA, or EWR in 2013
+* `airlines`: airline abbreviations
+* `airports`: airport metadata
+* `planes`: airplane metadata
+* `weather`: hourly weather data for JFK, LGA, and EWR
+
+Join example #1
+===
+
+Who manufactures the planes that flew to Seattle?
+
+```r
+flights %>% filter(dest == "SEA") %>% select(tailnum) %>%
+    left_join(planes %>% select(tailnum, manufacturer),
+              by = "tailnum") %>%
+    distinct(manufacturer)
+```
+
+```
+Source: local data frame [6 x 2]
+
+  tailnum       manufacturer
+    (chr)              (chr)
+1  N594AS             BOEING
+2  N503JB   AIRBUS INDUSTRIE
+3  N3ETAA                 NA
+4  N712JB             AIRBUS
+5  N508JB CIRRUS DESIGN CORP
+6  N531JB      BARKER JACK L
+```
+
+Join example #2
+===
+
+Which airlines had the most flights to Seattle from NYC?
+
+```r
+flights %>% filter(dest == "SEA") %>% select(carrier) %>%
+    left_join(airlines, by = "carrier") %>%
+    group_by(name) %>% tally() %>% arrange(desc(n))
+```
+
+```
+Source: local data frame [5 x 2]
+
+                    name     n
+                  (fctr) (int)
+1   Delta Air Lines Inc.  1213
+2  United Air Lines Inc.  1117
+3   Alaska Airlines Inc.   714
+4        JetBlue Airways   514
+5 American Airlines Inc.   365
+```
+
+
+Join example #3
+===
+
+Is there a relationship between departure delays and wind gusts?
+
+
+```r
+library(ggplot2)
+flights %>% select(origin, year, month, day, hour, dep_delay) %>%
+    inner_join(weather, by = c("origin", "year", "month", "day", "hour")) %>%
+    select(dep_delay, wind_gust) %>%
+    # removing rows with missing values
+    filter(!is.na(dep_delay) & !is.na(wind_gust)) %>% 
+    ggplot(aes(x = wind_gust, y = dep_delay)) +
+    geom_point() + geom_smooth()
+```
+
+Wind gusts and delays
+===
+
+<img src="slides_week_3-figure/unnamed-chunk-25-1.png" title="plot of chunk unnamed-chunk-25" alt="plot of chunk unnamed-chunk-25" width="1100px" height="500px" />
+
+Redo after removing extreme outliers, just trend
+===
+
+
+```r
+flights %>% select(origin, year, month, day, hour, dep_delay) %>%
+    inner_join(weather, by = c("origin", "year", "month", "day", "hour")) %>%
+    select(dep_delay, wind_gust) %>%
+    filter(!is.na(dep_delay) & !is.na(wind_gust) & wind_gust < 250) %>% 
+    ggplot(aes(x = wind_gust, y = dep_delay)) +
+    geom_smooth() + theme_bw(base_size = 16) +
+    xlab("Wind gusts in departure hour (mph)") +
+    ylab("Average departure delay (minutes)")
+```
+
+Wind gusts and delays: mean trend
+===
+
+<img src="slides_week_3-figure/unnamed-chunk-27-1.png" title="plot of chunk unnamed-chunk-27" alt="plot of chunk unnamed-chunk-27" width="1100px" height="500px" />
 
 
 Lab break!
 ===
 
-Practice some joins on the airplane data.
+Some possible questions to investigate:
+
+* What are the names of the most common destination airports?
+* Which airlines fly from NYC to your home city?
+* Is there a relationship between departure delays and precipitation?
+* Use the time zone data in `airports` to convert flight arrival times to NYC local time.
+    + What is the distribution of arrival times for flights leaving NYC over a 24 hour period?
+    + Are especially late or early arrivals particular to some regions or airlines?
+
+**Warning!** The `flights` data has 336776 rows, so if you do a badly specified join, you can end up with many matches per observation and have the data blow up.
 
 
 Homework
 ===
 type: section
 
-Pick some relationship to look at in the Gapminder data (e.g. changes in life expectancy over time) and write up a .Rmd file describing `ggplot2` visualizations used to investigate that question. You can choose to work with a subset of the data (e.g. just African countries). Upload both the .Rmd file and the .html file to Canvas.
+Pick something to look at in the `nycflights13` data and write up a .Rmd file showing your investigation. Upload both the .Rmd file and the .html file to Canvas. You must use at least once: `mutate`, `summarize`, `group_by`, and joins. Include at least one formatted plot or table.
 
-You should include somewhere between 4 and 8 graphs. All titles, axes, and legends should be labelled clearly (not raw variable names). You must have at least one graph with `facet_wrap` or `facet_grid`. You must include at least one manually specified legend. You can go beyond the `geoms` covered today if you want to make histograms, bar charts, add vertical or horizontal lines, etc.
-
-Your document should be pleasant for a peer to look at, with some organization. You must write up your observations in words as well as showing the graphs. Use chunk options `echo` and `results` to limit the code/output you show in the .html.
+This time, include all your code in your output document, using comments and line breaks separating commands so that it is clear to a peer what you are doing. You must write up your observations in words as well. 
 
 
 Grading rubric
