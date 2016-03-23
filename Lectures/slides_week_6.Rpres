@@ -6,6 +6,14 @@ transition: rotate
 width: 1100
 height: 750
 
+Topics today
+===
+
+- for loops
+- alternatives to for loops: dplyr::do, apply, lapply
+- while
+- conditionals
+- function writing
 
 Programming fundamentals
 ===

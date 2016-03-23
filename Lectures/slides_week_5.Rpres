@@ -7,17 +7,74 @@ width: 1100
 height: 750
 
 
-Topics today
+Today
 ===
 
+Today we'll be talking about issues around getting data in and out of R, and making it analytically ready:
+
 - Working directories and projects
-- Getting data into R
-- Reshaping data: `tidyr`
+- Importing and exporting data
+- Cleaning and reshaping data: `tidyr`
 - Fixing factor variables
-- Getting data out of R
+
+Directories
+===
+type: section
 
 
-Factors
+Your working directory
+===
+
+getwd, setwd
+
+
+Projects in RStudio
+===
+
+Constructing filepaths
+===
+
+paste0
+
+
+Importing and exporting data
+===
+type: section
+
+
+read.table and read.csv
+===
+
+reading off the web, header, stringsasfactors, delimiters, specifying column types
+
+
+readr package
+===
+
+
+write.table and write.csv
+===
+
+Cleaning up data
+===
+type: section
+
+
+Initial checks
+===
+
+How are missing values encoded? Are there rows that didn't make it or extra blank ones? Are there heading/spacing rows to remove?
+
+Long vs. wide data
+===
+
+tidyr
+===
+
+gather, spread, separate
+
+
+Managing factor variables
 ===
 type: section
 
@@ -41,3 +98,8 @@ Dropping unused levels
 Often after subsetting or cleaning you will end up with fewer realized values of the factor than you had originally, but the old levels remain linked to the factor. You can drop unused levels using `droplevels`.
 
 
+Homework
+===
+type: section
+
+Read in some data, and then get it analytically ready, and make some plots once it's long.
