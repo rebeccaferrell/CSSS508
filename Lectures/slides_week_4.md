@@ -10,17 +10,14 @@ height: 750
 R data types
 ===
 
-So far we've been manipulating data frames, making visuals, and summarizing. This got you pretty far! Now you need to get more in the weeds of programming in R. Today:
-
-- R data structures: vectors, types
-- Programming controls: loops, conditionals, etc.
+So far we've been manipulating data frames, making visuals, and summarizing. This got you pretty far! Now you need to get more in the weeds of programming in R. Today is all about types of data in R.
 
 Vectors
 ===
 type: section
 
 
-Data frames are a useful way to store data in R. A data frame is really a **list** of **vectors**, where each vector is a column of the same length (number of rows). But data frames are not the only object we want to have in R: e.g. linear regression output. So we need to learn about vectors, matrices, and lists to do additional things we can't express with `dplyr` syntax.
+A data frame is really a **list** of **vectors**, where each vector is a column of the same length (number of rows). But data frames are not the only object we want to have in R, e.g. linear regression output. We need to learn about vectors, matrices, and lists to do additional things we can't express with `dplyr` syntax.
 
 
 Making vectors
@@ -31,7 +28,7 @@ In R, we call a set of values a **vector**. We can create vectors by using the `
 
 
 ```r
-c(1,3,7,-0.5)
+c(1, 3, 7, -0.5)
 ```
 
 ```
@@ -41,7 +38,7 @@ c(1,3,7,-0.5)
 Vectors have **length**:
 
 ```r
-length(c(1,3,7,-0.5))
+length(c(1, 3, 7, -0.5))
 ```
 
 ```
@@ -81,7 +78,7 @@ incremental: true
 If we work with vectors of different lengths, R will **recycle** the shorter one by repeating it to make it match up with the longer one:
 
 ```r
-c(0.5,3) * c(1,2,3,4)
+c(0.5, 3) * c(1, 2, 3, 4)
 ```
 
 ```
@@ -89,7 +86,7 @@ c(0.5,3) * c(1,2,3,4)
 ```
 
 ```r
-c(0.5,3,0.5,3) * c(1,2,3,4) # same thing
+c(0.5, 3, 0.5, 3) * c(1, 2, 3, 4) # same thing
 ```
 
 ```
@@ -155,7 +152,7 @@ max(c(1,2,3,4))
 [1] 4
 ```
 
-Some others: `min`, `mean`, `median`, `sd`, `var`
+Some others: `min`, `mean`, `median`, `sd`, `var` -- you've seen these used with `dplyr::summarize`.
 
 
 Example: standardizing data
@@ -400,7 +397,7 @@ Subsetting vectors
 ===
 incremental: true
 
-We often want to only deal with some elements of a vector. We can **subset** the vector in a number of ways:
+We can **subset** the vector in a number of ways:
 
 * Passing a single index or vector of entries to keep:
 
@@ -599,7 +596,7 @@ Named vector entries
 ===
 incremental: true
 
-Another way we can index and subset vectors is by assigning **names** to the entries.
+We can also index vectors by assigning **names** to the entries.
 
 ```r
 a_vector <- 1:26
@@ -613,7 +610,7 @@ A B C D E F
 ```
 
 ```r
-a_vector[c("R","S","T","U","D","I","O")]
+a_vector[c("R", "S", "T", "U", "D", "I", "O")]
 ```
 
 ```
@@ -636,8 +633,7 @@ incremental: true
 **Matrices** extend vectors to two dimensions: rows and columns.
 
 ```r
-a_matrix <- matrix(letters[1:6], nrow=2, ncol=3)
-a_matrix
+(a_matrix <- matrix(letters[1:6], nrow=2, ncol=3))
 ```
 
 ```
@@ -647,8 +643,7 @@ a_matrix
 ```
 
 ```r
-b_matrix <- matrix(letters[1:6], nrow=2, ncol=3, byrow=TRUE)
-b_matrix
+(b_matrix <- matrix(letters[1:6], nrow=2, ncol=3, byrow=TRUE))
 ```
 
 ```
@@ -665,8 +660,7 @@ incremental: true
 We can also make matrices by binding vectors together.
 
 ```r
-c_matrix <- cbind(c(1, 2), c(3, 4), c(5, 6))
-c_matrix
+(c_matrix <- cbind(c(1, 2), c(3, 4), c(5, 6)))
 ```
 
 ```
@@ -676,8 +670,7 @@ c_matrix
 ```
 
 ```r
-d_matrix <- rbind(c(1, 2, 3), c(4, 5, 6))
-d_matrix
+(d_matrix <- rbind(c(1, 2, 3), c(4, 5, 6)))
 ```
 
 ```
@@ -710,7 +703,7 @@ a_matrix[1, c(2, 3)] # row 1, columns 2 and 3
 ```
 
 
-Subsetting matrices
+Matrices becoming vectors
 ===
 incremental: true
 
@@ -743,22 +736,21 @@ incremental: true
 Matrices can be numeric, integer, factor, character, or logical, just like vectors. Also like vectors, they must be all the same data type.
 
 ```r
-bad_matrix <- cbind(1:2, letters[1:2])
-class(bad_matrix)
-```
-
-```
-[1] "matrix"
-```
-
-```r
-bad_matrix
+(bad_matrix <- cbind(1:2, letters[1:2]))
 ```
 
 ```
      [,1] [,2]
 [1,] "1"  "a" 
 [2,] "2"  "b" 
+```
+
+```r
+class(bad_matrix)
+```
+
+```
+[1] "matrix"
 ```
 In this case, everything was converted to character so as not to lose information.
 
@@ -793,6 +785,7 @@ Draco "2"           "b"
 
 Matrix arithmetic
 ===
+incremental: true
 
 Matrices of the same dimensions can have math performed entry-wise with the usual arithmetic operators:
 
@@ -811,6 +804,7 @@ Matrices of the same dimensions can have math performed entry-wise with the usua
 
 Matrix transposition and multiplication
 ===
+incremental: true
 
 To do matrix transpositions, use `t()`.
 
@@ -840,6 +834,7 @@ To do proper matrix multiplication (not entry-wise), use `%*%`.
 
 Matrix inversion
 ===
+incremental: true
 
 To invert an invertible square matrix, use `solve()`.
 
@@ -866,6 +861,7 @@ f_matrix %*% g_matrix
 
 Diagonal matrices
 ===
+incremental: true
 
 To extract the diagonal of a matrix or make a diagonal matrix (usually the identity matrix), use `diag()`.
 
@@ -896,11 +892,12 @@ type: section
 
 What are lists?
 ===
+incremental: true
 
 **Lists** are an object that can store multiple types of data.
 
 ```r
-( my_list <- list("first_thing" = 1:5, "second_thing" = matrix(8:11, nrow = 2), "third_thing" = lm(dist ~ speed, data = cars)) )
+(my_list <- list("first_thing" = 1:5, "second_thing" = matrix(8:11, nrow = 2), "third_thing" = lm(dist ~ speed, data = cars)))
 ```
 
 ```
@@ -925,6 +922,7 @@ Coefficients:
 
 Accessing list elements
 ===
+incremental: true
 
 You can access a list element by its name or number in `[[]]`, or a `$` with its name:
 
@@ -954,6 +952,7 @@ my_list[[1]]
 
 Why two brackets [[]]?
 ===
+incremental: true
 
 
 ```r
@@ -978,6 +977,7 @@ If you use one bracket to access list elements, you get a **sublist** back. The 
 
 Sublists can be of length > 1
 ===
+incremental: true
 
 You can use vector-style subsetting to get a sublist:
 
@@ -1002,6 +1002,7 @@ List of 2
 
 Linear regression output is a list!
 ===
+incremental: true
 
 
 ```r
@@ -1071,6 +1072,7 @@ List of 12
 
 Getting fitted regression coefficients
 ===
+incremental: true
 
 
 ```r
@@ -1094,6 +1096,7 @@ my_list[[3]][["coefficients"]]["speed"]
 
 cars is just a list of vectors!
 ===
+incremental: true
 
 
 ```r
@@ -1125,6 +1128,7 @@ length(cars$dist) # should be same as nrow(cars)
 
 We can edit cars
 ===
+incremental: true
 
 
 ```r
@@ -1149,48 +1153,9 @@ head(cars2, 3)
 3     7    4
 ```
 
-
-Factors
+swirl
 ===
 type: section
-
-Factors are such a common type of vector in R data frames that we need to get to know them a little better.
-
-Factor concepts
-===
-
-Levels, ordering, as.character, as.numeric
-
-
-Reordering factors
-===
-
-Notice when you plot factor variables in `ggplot2`, they go in order of the **levels** (typically alphabetical). To improve the plot, we might want to change the order using `reorder`.
-
-Dropping unused levels
-==
-
-Often after subsetting you will end up with fewer realized values of the factor than you had originally, but the old levels remain linked to the factor. You can drop unused levels using `droplevels`.
-
-
-
-Programming fundamentals
-===
-type: section
-
-
-for() loops
-===
-
-
-while()
-===
-
-
-conditionals
-===
-
-
 
 Lab/homework: swirl
 ===
@@ -1210,7 +1175,7 @@ Swirl assignment
 Please complete the following tutorials in `swirl`:
 
 1. Basic Building Blocks
-2. Workspace and Files $\leftarrow$ stick to Desktop or `U:\` drive
+2. Workspace and Files
 3. Sequences of Numbers
 4. Vectors
 5. Missing Values
