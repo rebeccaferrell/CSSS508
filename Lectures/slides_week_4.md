@@ -10,7 +10,8 @@ height: 750
 R data types
 ===
 
-So far we've been manipulating data frames, making visuals, and summarizing. This got you pretty far! Now you need to get more in the weeds of programming in R. Today is all about types of data in R.
+So far we've been manipulating data frames, making visuals, and summarizing. This got you pretty far! Now we get more in the weeds of programming. Today is all about types of data in R.
+
 
 Vectors
 ===
@@ -53,7 +54,7 @@ incremental: true
 When doing arithmetic operations on vectors, R handles these element-wise:
 
 ```r
-c(1,2,3) + c(4,5,6)
+c(1, 2, 3) + c(4, 5, 6)
 ```
 
 ```
@@ -61,7 +62,7 @@ c(1,2,3) + c(4,5,6)
 ```
 
 ```r
-c(1,2,3,4)^3 # exponentiation with ^
+c(1, 2, 3, 4)^3 # exponentiation with ^
 ```
 
 ```
@@ -101,7 +102,7 @@ incremental: true
 A special case of recycling involves arithmetic with **scalars** (a single number). These are vectors of length 1 that are recycled to make a longer vector:
 
 ```r
-3 * c(-1,0,1,2) + 1
+3 * c(-1, 0, 1, 2) + 1
 ```
 
 ```
@@ -116,7 +117,7 @@ incremental: true
 Recycling doesn't work so well with vectors of incommensurate lengths:
 
 ```r
-c(1,2,3,4) + c(0.5,1.5,2.5)
+c(1, 2, 3, 4) + c(0.5, 1.5, 2.5)
 ```
 
 ```
@@ -137,7 +138,7 @@ incremental: true
 Some functions operate on an entire vector and return one number rather than working element-wise:
 
 ```r
-sum(c(1,2,3,4))
+sum(c(1, 2, 3, 4))
 ```
 
 ```
@@ -145,7 +146,7 @@ sum(c(1,2,3,4))
 ```
 
 ```r
-max(c(1,2,3,4))
+max(c(1, 2, 3, 4))
 ```
 
 ```
@@ -162,7 +163,7 @@ incremental: true
 Let's say we had some test scores and we wanted to put these on a standardized scale: $$z_i = \frac{x_i - \text{mean}(x)}{\text{SD}(x)}$$
 
 ```r
-x <- c(97,68,75,77,69,81,80,92,50,34,66,83,62)
+x <- c(97, 68, 75, 77, 69, 81, 80, 92, 50, 34, 66, 83, 62)
 z <- (x - mean(x)) / sd(x)
 round(z,2)
 ```
@@ -402,7 +403,7 @@ We can **subset** the vector in a number of ways:
 * Passing a single index or vector of entries to keep:
 
 ```r
-first_names[c(1,4)]
+first_names[c(1, 4)]
 ```
 
 ```
@@ -411,7 +412,7 @@ first_names[c(1,4)]
 * Passing a single index or vector of entries to drop:
 
 ```r
-first_names[-c(1,4)]
+first_names[-c(1, 4)]
 ```
 
 ```
@@ -1179,11 +1180,11 @@ Example: approximate 95% confidence interval
 
 
 ```r
-speed_CI <- c(speed_beta - qnorm(0.975) * speed_SE, speed_beta + qnorm(0.975) * speed_SE)
+speed_CI <- speed_beta + c(-qnorm(0.975), qnorm(0.975)) * speed_SE
 names(speed_CI) <- c("lower", "upper")
 ```
 
-Now you can include these values in a Markdown document like so:
+Now you can include these values in a Markdown document:
 
 ```r
 A 1 mph increase in speed is associated with a `r round(speed_beta, 1)` ft increase in stopping distance (95% CI: (`r round(speed_CI["lower"],1)`, `r round(speed_CI["upper"],1)`)).
@@ -1251,14 +1252,14 @@ head(cars2, 3)
 3     7    4
 ```
 
-swirl
+Lab and homework
 ===
 type: section
 
-Lab/homework: swirl
+Suggested lab practice: swirl
 ===
 
-This week, we will use `swirl` to do some interactive R tutorials that cover these structure basics. To set up `swirl`:
+You can do interactive R tutorials in `swirl` that cover these structure basics. To set up `swirl`:
 
 1. `install.packages("swirl")`
 2. `library("swirl")`
@@ -1266,19 +1267,10 @@ This week, we will use `swirl` to do some interactive R tutorials that cover the
 4. Choose `R Programming`, pick a tutorial, and follow directions
 5. To get out of `swirl`, type `bye()` in the middle of a lesson, or `0` in the menus
 
+At this point, tutorials 1-8 are appropriate.
 
-Swirl assignment
+Homework
 ===
+type:section
 
-Please complete the following tutorials in `swirl`:
-
-1. Basic Building Blocks
-2. Workspace and Files
-3. Sequences of Numbers
-4. Vectors
-5. Missing Values
-6. Subsetting Vectors
-7. Matrices and Data Frames
-8. Logic
-
-Then complete Quiz 1 on Canvas.
+For homework, you'll be filling in a template R Markdown file that will walk you through performing multiple linear regression "by hand" and comparing it with what you get using `lm()`. It will involve simulating data (which I will do for you), matrix math, column and row names, accessing list elements.
