@@ -965,6 +965,8 @@ Why two brackets [[]]?
 ===
 incremental: true
 
+If you use one bracket to access list elements, you get a **sublist** back. The double brackets get the actual element in that location in the list.
+
 
 ```r
 str(my_list[1])
@@ -982,8 +984,6 @@ str(my_list[[1]])
 ```
  int [1:5] 1 2 3 4 5
 ```
-
-If you use one bracket to access list elements, you get a **sublist** back. The double brackets get the actual element in that location in the list.
 
 
 Sublists can be of length > 1
