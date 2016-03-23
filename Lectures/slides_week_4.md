@@ -759,7 +759,7 @@ Matrix dimension names
 ===
 incremental: true
 
-We can name the dimensions using `rownames` and `colnames`:
+We can access dimension names or name them ourselves:
 
 ```r
 rownames(bad_matrix) <- c("Harry", "Draco")
@@ -790,6 +790,16 @@ incremental: true
 Matrices of the same dimensions can have math performed entry-wise with the usual arithmetic operators:
 
 
+
+```r
+cbind(c_matrix, d_matrix) # look at side by side
+```
+
+```
+     [,1] [,2] [,3] [,4] [,5] [,6]
+[1,]    1    3    5    1    2    3
+[2,]    2    4    6    4    5    6
+```
 
 ```r
 3 * c_matrix / d_matrix
@@ -1069,6 +1079,21 @@ List of 12
  - attr(*, "class")= chr "lm"
 ```
 
+Use names to find out list elements
+===
+incremental: true
+
+
+```r
+names(my_list[[3]])
+```
+
+```
+ [1] "coefficients"  "residuals"     "effects"       "rank"         
+ [5] "fitted.values" "assign"        "qr"            "df.residual"  
+ [9] "xlevels"       "call"          "terms"         "model"        
+```
+
 
 Getting fitted regression coefficients
 ===
@@ -1085,7 +1110,7 @@ my_list[[3]][["coefficients"]]
 ```
 
 ```r
-my_list[[3]][["coefficients"]]["speed"]
+(speed_beta <- my_list[[3]][["coefficients"]]["speed"])
 ```
 
 ```
@@ -1093,8 +1118,81 @@ my_list[[3]][["coefficients"]]["speed"]
 3.932409 
 ```
 
+Summarizing regression with a list
+===
+incremental: true
 
-cars is just a list of vectors!
+`summary(lm_object)` is also a list with more information, which has the side effect of printing some output to the console:
+
+```r
+summary(my_list[[3]]) # this prints output
+```
+
+```
+
+Call:
+lm(formula = dist ~ speed, data = cars)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-29.069  -9.525  -2.272   9.215  43.201 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -17.5791     6.7584  -2.601   0.0123 *  
+speed         3.9324     0.4155   9.464 1.49e-12 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 15.38 on 48 degrees of freedom
+Multiple R-squared:  0.6511,	Adjusted R-squared:  0.6438 
+F-statistic: 89.57 on 1 and 48 DF,  p-value: 1.49e-12
+```
+
+
+Getting standard errors
+===
+incremental: true
+
+
+```r
+summary(my_list[[3]])[["coefficients"]] # a matrix
+```
+
+```
+              Estimate Std. Error   t value     Pr(>|t|)
+(Intercept) -17.579095  6.7584402 -2.601058 1.231882e-02
+speed         3.932409  0.4155128  9.463990 1.489836e-12
+```
+
+```r
+(speed_SE <- summary(my_list[[3]])[["coefficients"]]["speed", "Std. Error"])
+```
+
+```
+[1] 0.4155128
+```
+
+
+Example: approximate 95% confidence interval
+===
+
+
+```r
+speed_CI <- c(speed_beta - qnorm(0.975) * speed_SE, speed_beta + qnorm(0.975) * speed_SE)
+names(speed_CI) <- c("lower", "upper")
+```
+
+Now you can include these values in a Markdown document like so:
+
+```r
+A 1 mph increase in speed is associated with a `r round(speed_beta, 1)` ft increase in stopping distance (95% CI: (`r round(speed_CI["lower"],1)`, `r round(speed_CI["upper"],1)`)).
+```
+
+A 1 mph increase in speed is associated with a 3.9 ft increase in stopping distance (95% CI: (3.1, 4.7)).
+
+
+Data frames are just a list of vectors!
 ===
 incremental: true
 

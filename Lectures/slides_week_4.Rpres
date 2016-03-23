@@ -410,7 +410,7 @@ Matrix dimension names
 ===
 incremental: true
 
-We can name the dimensions using `rownames` and `colnames`:
+We can access dimension names or name them ourselves:
 ```{r}
 rownames(bad_matrix) <- c("Harry", "Draco")
 colnames(bad_matrix) <- c("Potions grade", "Quidditch position")
@@ -427,6 +427,7 @@ Matrices of the same dimensions can have math performed entry-wise with the usua
 
 
 ```{r}
+cbind(c_matrix, d_matrix) # look at side by side
 3 * c_matrix / d_matrix
 ```
 
@@ -526,6 +527,14 @@ incremental: true
 str(my_list[[3]])
 ```
 
+Use names to find out list elements
+===
+incremental: true
+
+```{r}
+names(my_list[[3]])
+```
+
 
 Getting fitted regression coefficients
 ===
@@ -533,11 +542,46 @@ incremental: true
 
 ```{r}
 my_list[[3]][["coefficients"]]
-my_list[[3]][["coefficients"]]["speed"]
+(speed_beta <- my_list[[3]][["coefficients"]]["speed"])
+```
+
+Summarizing regression with a list
+===
+incremental: true
+
+`summary(lm_object)` is also a list with more information, which has the side effect of printing some output to the console:
+```{r}
+summary(my_list[[3]]) # this prints output
 ```
 
 
-cars is just a list of vectors!
+Getting standard errors
+===
+incremental: true
+
+```{r}
+summary(my_list[[3]])[["coefficients"]] # a matrix
+(speed_SE <- summary(my_list[[3]])[["coefficients"]]["speed", "Std. Error"])
+```
+
+
+Example: approximate 95% confidence interval
+===
+
+```{r}
+speed_CI <- c(speed_beta - qnorm(0.975) * speed_SE, speed_beta + qnorm(0.975) * speed_SE)
+names(speed_CI) <- c("lower", "upper")
+```
+
+Now you can include these values in a Markdown document like so:
+```{r, eval=FALSE}
+A 1 mph increase in speed is associated with a `r round(speed_beta, 1)` ft increase in stopping distance (95% CI: (`r round(speed_CI["lower"],1)`, `r round(speed_CI["upper"],1)`)).
+```
+
+A 1 mph increase in speed is associated with a `r round(speed_beta, 1)` ft increase in stopping distance (95% CI: (`r round(speed_CI["lower"],1)`, `r round(speed_CI["upper"],1)`)).
+
+
+Data frames are just a list of vectors!
 ===
 incremental: true
 
