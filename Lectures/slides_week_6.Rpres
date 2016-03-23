@@ -1,0 +1,39 @@
+CSSS 508, Week 6
+===
+author: Rebecca Ferrell
+date: May 4, 2016
+transition: rotate
+width: 1100
+height: 750
+
+
+Programming fundamentals
+===
+type: section
+
+
+for() loops
+===
+
+
+while()
+===
+
+
+conditionals
+===
+
+
+Vectorizing
+===
+
+
+Function writing
+===
+type: section
+
+
+Homework
+===
+
+Write a function to perform linear regression using matrix operations. Check its results against `lm`.
