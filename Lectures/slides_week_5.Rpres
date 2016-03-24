@@ -12,6 +12,7 @@ Today
 
 Today we'll be talking about issues around getting data in and out of R and making it analytically ready:
 
+
 - Working directories and projects
 - Importing and exporting data
 - Cleaning and reshaping data: `tidyr`
@@ -33,6 +34,28 @@ Projects in RStudio
 ===
 
 
+
+Constructing filepaths
+===
+
+paste0
+
+
+=======
+
+Directories
+===
+type: section
+
+
+Your working directory
+===
+
+getwd, setwd
+
+
+Projects in RStudio
+===
 
 Constructing filepaths
 ===
@@ -62,6 +85,7 @@ Excel files
 
 packages to read xls and xlsx files
 
+=======
 
 write.table and write.csv
 ===
@@ -70,6 +94,7 @@ dput
 ===
 
 For asking for help
+
 
 
 Cleaning up data
