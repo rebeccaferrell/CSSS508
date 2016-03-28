@@ -321,7 +321,7 @@ summary(billboard_2000$length)
 extract_numeric
 ===
 
-`tidyr` provides a simple function to grab the numeric information from a column that mixes text and numbers:
+`tidyr` provides a simple function to grab just the numeric information from a column that mixes text and numbers:
 
 
 ```r
