@@ -7,17 +7,338 @@ width: 1100
 height: 750
 
 
-Topics today
+Today's theme: data cleaning
 ===
 
+Issues around getting data in and out of R and making it analytically ready:
+
 - Working directories and projects
-- Getting data into R
-- Reshaping data: `tidyr`
-- Fixing factor variables
-- Getting data out of R
+- Importing and exporting data
+- Cleaning and reshaping data: `tidyr`
+- Controlling factor variables
 
 
-Factors
+Directories
+===
+type: section
+
+
+Your working directory
+===
+
+The **working directory** is where R will look for and save things by default. You can find out what it is using the function `getwd()`. On my computer when I ran this, it happens to be:
+
+```r
+getwd()
+```
+
+```
+[1] "/Users/rferrell/Dropbox/CSSS508/Lectures"
+```
+
+
+Changing your working directory
+===
+
+You can use `setwd(dir = "C:/path/to/new/working/directory")` to change the working directory.
+
+Comments:
+* Windows users: make sure to change back slashes (`\`) to forward slashes (`/`) for the filepaths
+* Recommendation is to put `setwd` at the very beginning of your `.R` or `.Rmd` code so that someone using a different computer knows they need to modify it
+
+
+Dropboxes
+===
+
+If you're working in a shared Dropbox folder or a similar setup where folders for different users have a common structure after some point, something like this can be a good idea:
+
+
+```r
+user_to_dropbox <- "~/Dropbox" # CHANGE ON YOUR MACHINE
+path_in_dropbox <- "CSSS508/our_data_analysis"
+setwd(file.path(user_to_dropbox, path_in_dropbox))
+```
+
+
+Projects in RStudio
+===
+
+Better way to deal with working directories: RStudio's **project** feature in the top-right dropdown. This has lots of advantages:
+
+* Sets your working directory to be the project directory
+* Can remember objects in your workspace, command history, etc. next time you re-open that project
+* Reduce risk of intermingling different work using the same variable names (e.g. `n`) by using separate RStudio instances for each project
+* Easy to integrate with version control systems (e.g. `git`)
+
+
+Relative paths
+===
+
+Once you've set the working directory, you should refer to folders and files within using relative paths.
+
+
+```r
+library(ggplot2)
+a_plot <- ggplot(data = cars, aes(x = speed, y = dist)) +
+    geom_point()
+ggsave("Graphics/cars_plot.png", plot = a_plot)
+```
+
+The above would save an image called "cars_plot.png" inside an existing folder called "Graphics" within my working directory.
+
+
+Importing and exporting data
+===
+type: section
+
+
+Delimited text files
+===
+
+The easiest way to work with external data is for it to be stored in a delimited text file, e.g. comma-separated values (**csv**) or tab-separated values (**tsv**).
+
+```
+"Subject","Depression","Sex","Week","HamD","Imipramine"
+101,"Non-endogenous","Male",0,26,NA
+101,"Non-endogenous","Male",1,22,NA
+101,"Non-endogenous","Male",2,18,4.04305
+101,"Non-endogenous","Male",3,7,3.93183
+101,"Non-endogenous","Male",4,4,4.33073
+101,"Non-endogenous","Male",5,3,4.36945
+103,"Non-endogenous","Female",0,33,NA
+103,"Non-endogenous","Female",1,24,NA
+103,"Non-endogenous","Female",2,15,2.77259
+```
+
+readr
+===
+
+R has a variety of built-in functions for importing data stored in text files, like `read.table` and `read.csv`. However, I recommend using the versions in the `readr` package instead: `read_csv`, `read_tsv`, and `read_delim`:
+
+- Faster!
+- Better defaults (e.g. doesn't automatically convert character data to factors)
+- A little smarter about dates and times
+- Handy function `problems()` you can run if there are errors
+
+readr importing example
+===
+
+```r
+# install.packages("readr")
+library(readr)
+```
+Let's import some data about song ranks on the Billboard Hot 100 back in 2000:
+
+```r
+billboard_2000_raw <- read_csv(file = "https://raw.githubusercontent.com/hadley/tidyr/master/vignettes/billboard.csv")
+```
+
+
+Excel files
+===
+
+The simplest thing to do with Excel files (`.xls` or `.xlsx`) is open them up, export to CSV, then import in R --- and compare carefully to make sure everything worked!
+
+For Excel files that might get updated and you want the changes to flow to your analysis, I recommend using an R package such as `readxl` or `openxlsx`.
+
+No matter what, you won't keep text formatting, color, comments, or merged cells so if these mean something in your data (*bad*!), you'll need to get creative.
+
+
+write_csv, write_tsv, write_delim
+===
+
+Getting data out of R into a delimited file is very similar to getting it into R:
+
+
+```r
+write_csv(billboard_2000_raw, path = "billboard_data.csv")
+```
+
+This saved the data we pulled off the web in a file called "billboard_data.csv" in my working directory.
+
+
+Saving in R formats
+===
+
+CSV files drop special R metadata, such as whether a variable is a character or factor. You can save data or other objects (lists, etc.) in R formats to preserve this.
+
+* `.Rds` format:
+    + Used for single objects, doesn't save original the object name
+    + Save: `write_rds(old_object_name, "path.Rds")`
+    + Load: `new_object_name <- read_rds("path.Rds")`
+* `.Rdata` or `.Rda` format:
+    + Used for saving multiple files where the original object names are preserved
+    + Save: `save(object1, object2, ... , file = "path.Rdata")`
+    + Load: `load("path.Rdata")` with no assignment
+
+dput
+===
+
+For asking for help, it is useful to prepare a snippet of your data with `dput`:
+
+
+```r
+dput(head(cars, 8))
+```
+
+```
+structure(list(speed = c(4, 4, 7, 7, 8, 9, 10, 10), dist = c(2, 
+10, 4, 22, 16, 10, 18, 26)), .Names = c("speed", "dist"), row.names = c(NA, 
+8L), class = "data.frame")
+```
+
+The output of `dput` can be copied and assigned to an object in R:
+
+```r
+temp <- structure(list(speed = c(4, 4, 7, 7, 8, 9, 10, 10), dist = c(2, 
+10, 4, 22, 16, 10, 18, 26)), .Names = c("speed", "dist"), row.names = c(NA, 8L), class = "data.frame")
+```
+
+
+Reading in data from other software
+===
+
+Working with Stata or SPSS users? You can use a package to bring in their data:
+
+* `foreign` for Stata, SPSS, Minitab
+* `sas7bdat` for SAS
+
+As always, Google it.
+
+
+Cleaning up data
+===
+type: section
+
+
+Initial checks
+===
+
+* Did the last rows/columns from the original file make it in?
+    + If not, you may need to use a different package.
+* Are the column names in good shape?
+    + Modify a `col_names` argument or fix with `rename`
+* Are there "decorative" blank rows to remove?
+    + `filter` out those rows
+* How are missing values represented: `NA`, blank, period, `999`?
+    + Use `ifelse` to fix these (perhaps *en masse* with looping)
+* Are there character data (e.g. ZIP codes with leading zeroes) being incorrectly represented as numeric?
+    + Modify `col_types` argument
+
+
+Observations, variables, values
+===
+incremental: true
+
+Look at the Billboard data:
+
+
+```r
+View(billboard_2000_raw)
+```
+
+* What are the **variables** in the data?
+* What are the **observations** in the data?
+* What are the **values** in the data?
+
+
+Billboard data
+===
+incremental: true
+
+* **Variables**:
+    + Year, artist, track, song length, date entered the top 100, week since entering, rank during week
+* **Observations**:
+    + Rank per week since entering per track
+* **Values**:
+    + e.g. 2000; 3 Doors Down; Kryptonite; 3 minutes 53 seconds; April 8, 2000; Week 3; rank 68
+
+
+tidy data
+===
+incremental: true
+
+**Tidy data** (long data) are such that each observation has its own row, each variable has its own column, and the observations are all of the saame nature.
+
+The Billboard data are *not* tidy.
+
+Why do we want tidy data?
+
+* Required for plotting in `ggplot2`
+* Required for many types of statistical procedures (e.g. hierarchical or mixed effects models)
+* Fewer confusing variable names
+* Fewer issues with "imbalanced" repeated measures data
+
+Strongly recommended reading: the [tidy data vignette](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
+
+tidyr
+===
+
+The `tidyr` package provides functions to take non-tidy data and make it tidy (or vice versa). It is similar to `reshape` in Stata or `proc transpose` in SAS. Its key functions:
+
+* `gather`: takes a set of columns and rotates them down to make two new columns: one with the original column name (`key`), and one with the value (`value`)
+* `spread`: inverts of `gather` by taking two columns and rotating them up
+* `separate`: pulls apart one column into multiple
+
+gather
+===
+
+Let's use `gather` to get the week and rank variables out of their current layout into two columns (big increase in rows, big drop in columns):
+
+```r
+library(dplyr)
+library(tidyr)
+billboard_2000 <- billboard_2000_raw %>%
+    gather(key = week, value = rank, starts_with("wk"))
+dim(billboard_2000)
+```
+
+```
+[1] 24092     7
+```
+`starts_with` and other helper functions from `dplyr::select` work here too. I could have instead used: `gather(key = week, value = rank, wk1:wk76)` to pull out these continguous columns.
+
+
+separate
+===
+
+The track length column isn't analytically friendly. Let's convert it to a number rather than the character (minutes:seconds) format:
+
+```r
+billboard_2000 <- billboard_2000 %>%
+    separate(time, into = c("minutes", "seconds"),
+             sep = ":", convert = TRUE) %>%
+    mutate(length = minutes + seconds / 60) %>%
+    select(-minutes, -seconds)
+summary(billboard_2000$length)
+```
+
+```
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  2.600   3.650   3.933   4.040   4.283   7.833 
+```
+
+extract_numeric
+===
+
+`tidyr` provides a simple function to grab the numeric information from a column that mixes text and numbers:
+
+
+```r
+billboard_2000 <- billboard_2000 %>%
+    mutate(week = extract_numeric(week))
+summary(billboard_2000$week)
+```
+
+```
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00   19.75   38.50   38.50   57.25   76.00 
+```
+
+For more sophisticated conversion or pattern checking, you'll need to use string-parsing (to be covered later).
+
+
+Managing factor variables
 ===
 type: section
 
@@ -41,3 +362,17 @@ Dropping unused levels
 Often after subsetting or cleaning you will end up with fewer realized values of the factor than you had originally, but the old levels remain linked to the factor. You can drop unused levels using `droplevels`.
 
 
+Other sanity checks
+===
+
+* Make lots of plots to look for unusual values or patterns (e.g. impossible percentages outside 0-100, systematically missing years, extreme outliers, certain values more common than expected)
+* For spreadsheet data, do calculations or plots within the spreadsheet and check that values in R match
+* "Off by one" errors?
+* More tools to clean up strings discussed in a few weeks!
+
+
+Homework
+===
+type: section
+
+Read in some data, and then get it analytically ready, and make some plots once it's long.
