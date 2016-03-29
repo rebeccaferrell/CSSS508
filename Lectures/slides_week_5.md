@@ -7,7 +7,7 @@ width: 1100
 height: 750
 
 
-Today's theme: data cleaning
+Today's theme: "janitor work"
 ===
 
 Issues around getting data in and out of R and making it analytically ready:
@@ -21,7 +21,6 @@ Issues around getting data in and out of R and making it analytically ready:
 Directories
 ===
 type: section
-
 
 Your working directory
 ===
@@ -92,10 +91,22 @@ Importing and exporting data
 type: section
 
 
+Special data access packages
+===
+
+Are you working with a popular data source? Try Googling to see if it has a devoted R package on CRAN or on Github (use `devtools::install_github` for these). Examples:
+
+* `WDI`: World Development Indicators (World Bank)
+* `WHO`: World Health Organization API
+* `censusapi`: Census API
+* `acs`: American Community Survey
+* `quantmod`: financial data from Yahoo, FRED, Google
+
+
 Delimited text files
 ===
 
-The easiest way to work with external data is for it to be stored in a delimited text file, e.g. comma-separated values (**csv**) or tab-separated values (**tsv**).
+Besides a package, the easiest way to work with external data is for it to be stored in a delimited text file, e.g. comma-separated values (**csv**) or tab-separated values (**tsv**).
 
 ```
 "Subject","Depression","Sex","Week","HamD","Imipramine"
@@ -113,12 +124,13 @@ The easiest way to work with external data is for it to be stored in a delimited
 readr
 ===
 
-R has a variety of built-in functions for importing data stored in text files, like `read.table` and `read.csv`. However, I recommend using the versions in the `readr` package instead: `read_csv`, `read_tsv`, and `read_delim`:
+R has a variety of built-in functions for importing data stored in text files, like `read.table` and `read.csv`. I recommend using the versions in the `readr` package instead: `read_csv`, `read_tsv`, and `read_delim`:
 
 - Faster!
 - Better defaults (e.g. doesn't automatically convert character data to factors)
 - A little smarter about dates and times
 - Handy function `problems()` you can run if there are errors
+
 
 readr importing example
 ===
@@ -133,6 +145,63 @@ Let's import some data about song ranks on the Billboard Hot 100 back in 2000:
 billboard_2000_raw <- read_csv(file = "https://raw.githubusercontent.com/hadley/tidyr/master/vignettes/billboard.csv")
 ```
 
+The data URL with a line break for readability:
+```
+https://raw.githubusercontent.com/hadley/tidyr/master/
+vignettes/billboard.csv
+```
+
+Did everything go OK?
+===
+
+Look at the data types for the last few columns:
+
+
+```r
+# str(billboard_2000_raw)
+str(billboard_2000_raw[, 65:ncol(billboard_2000_raw)])
+```
+
+```
+Classes 'tbl_df', 'tbl' and 'data.frame':	317 obs. of  17 variables:
+ $ wk60: int  NA NA NA NA NA NA NA NA NA NA ...
+ $ wk61: int  NA NA NA NA NA NA NA NA NA NA ...
+ $ wk62: int  NA NA NA NA NA NA NA NA NA NA ...
+ $ wk63: int  NA NA NA NA NA NA NA NA NA NA ...
+ $ wk64: int  NA NA NA NA NA NA NA NA NA NA ...
+ $ wk65: int  NA NA NA NA NA NA NA NA NA NA ...
+ $ wk66: chr  NA NA NA NA ...
+ $ wk67: chr  NA NA NA NA ...
+ $ wk68: chr  NA NA NA NA ...
+ $ wk69: chr  NA NA NA NA ...
+ $ wk70: chr  NA NA NA NA ...
+ $ wk71: chr  NA NA NA NA ...
+ $ wk72: chr  NA NA NA NA ...
+ $ wk73: chr  NA NA NA NA ...
+ $ wk74: chr  NA NA NA NA ...
+ $ wk75: chr  NA NA NA NA ...
+ $ wk76: chr  NA NA NA NA ...
+```
+
+
+What went wrong?
+===
+incremental: true
+
+`readr` uses the values in the first 1000 rows to guess the type of the column (integer, logical, numeric, character). There are not many songs in the data that charted for 60+ weeks --- and none in the first 1000 that charted for 66+ weeks! 
+
+To be safe, `readr` assumed the `wk66`-`wk76` columns were character. Use the `col_types` argument to fix this:
+
+
+```r
+# paste is a concatenation function
+# i = integer, c = character, D = date
+# rep("i", 76) does the 76 weeks of integer ranks
+bb_types <- paste(c("icccD", rep("i", 76)), collapse="")
+
+billboard_2000_raw <- read_csv(file = "https://raw.githubusercontent.com/hadley/tidyr/master/vignettes/billboard.csv", col_types = bb_types)
+```
+
 
 Excel files
 ===
@@ -141,7 +210,7 @@ The simplest thing to do with Excel files (`.xls` or `.xlsx`) is open them up, e
 
 For Excel files that might get updated and you want the changes to flow to your analysis, I recommend using an R package such as `readxl` or `openxlsx`.
 
-No matter what, you won't keep text formatting, color, comments, or merged cells so if these mean something in your data (*bad*!), you'll need to get creative.
+You won't keep text formatting, color, comments, or merged cells so if these mean something in your data (*bad*!), you'll need to get creative.
 
 
 write_csv, write_tsv, write_delim
@@ -160,7 +229,7 @@ This saved the data we pulled off the web in a file called "billboard_data.csv" 
 Saving in R formats
 ===
 
-CSV files drop special R metadata, such as whether a variable is a character or factor. You can save data or other objects (lists, etc.) in R formats to preserve this.
+Exporting to a CSV drops R metadata, such as whether a variable is a character or factor. You can save objects (data frames, lists, etc.) in R formats to preserve this.
 
 * `.Rds` format:
     + Used for single objects, doesn't save original the object name
@@ -198,7 +267,7 @@ temp <- structure(list(speed = c(4, 4, 7, 7, 8, 9, 10, 10), dist = c(2,
 Reading in data from other software
 ===
 
-Working with Stata or SPSS users? You can use a package to bring in their data:
+Working with Stata or SPSS users? You can use a package to bring in their saved data files:
 
 * `foreign` for Stata, SPSS, Minitab
 * `sas7bdat` for SAS
@@ -211,74 +280,86 @@ Cleaning up data
 type: section
 
 
-Initial checks
+Initial spot checks
 ===
+incremental: true
 
 * Did the last rows/columns from the original file make it in?
     + If not, you may need to use a different package.
 * Are the column names in good shape?
     + Modify a `col_names` argument or fix with `rename`
-* Are there "decorative" blank rows to remove?
-    + `filter` out those rows
+* Are there "decorative" blank rows or columns to remove?
+    + `filter` or `select` out those rows/columns
 * How are missing values represented: `NA`, blank, period, `999`?
-    + Use `ifelse` to fix these (perhaps *en masse* with looping)
-* Are there character data (e.g. ZIP codes with leading zeroes) being incorrectly represented as numeric?
-    + Modify `col_types` argument
+    + Use `mutate` with `ifelse` to fix these (perhaps *en masse* with looping)
+* Are there character data (e.g. ZIP codes with leading zeroes) being incorrectly represented as numeric or vice versa?
+    + Modify `col_types` argument, or use `mutate` and `as.numeric`
 
 
-Observations, variables, values
+"Pretty-messy" data (like "skinny-fat")
 ===
 incremental: true
 
-Look at the Billboard data:
+| **Program**       | **Female** | **Male** |
+|---------------|-------:|-----:|
+| Evans School  |     10 |    4 |
+| Public Health |      1 |    3 |
+| Other         |      7 |    5 |
+
+* What is an observation?
+    + Count of students from a program of a given gender
+* What are the variables?
+    + Program, gender
+* What are the values?
+    + Program: Evans School, Public Health, Other
+    + Gender: Female, Male -- **in the column headings, not its own column!**
+    + Count: **spread over two columns!**
+
+
+Billboard is just "ugly-messy"
+===
+incremental: true
 
 
 ```r
 View(billboard_2000_raw)
 ```
 
-* What are the **variables** in the data?
 * What are the **observations** in the data?
+    + Rank per week since entering the Billboard Top 100 per song
+* What are the **variables** in the data?
+    + Year, artist, track, song length, date entered Top 100, week since first entered Top 100 (**spread over many columns**), rank during week (**spread over many columns**)
 * What are the **values** in the data?
-
-
-Billboard data
-===
-incremental: true
-
-* **Variables**:
-    + Year, artist, track, song length, date entered the top 100, week since entering, rank during week
-* **Observations**:
-    + Rank per week since entering per track
-* **Values**:
-    + e.g. 2000; 3 Doors Down; Kryptonite; 3 minutes 53 seconds; April 8, 2000; Week 3; rank 68
+    + e.g. 2000; 3 Doors Down; Kryptonite; 3 minutes 53 seconds; April 8, 2000; Week 3 (**stuck in column labels**); rank 68 (**spread over many columns**)
 
 
 tidy data
 ===
 incremental: true
 
-**Tidy data** (long data) are such that each observation has its own row, each variable has its own column, and the observations are all of the saame nature.
+**Tidy data** (long data) are such that:
 
-The Billboard data are *not* tidy.
+1. The values for a single observation are in their own row.
+2. The values for a single variable are in their own column.
+3. The observations are all of the same nature.
 
 Why do we want tidy data?
 
 * Required for plotting in `ggplot2`
 * Required for many types of statistical procedures (e.g. hierarchical or mixed effects models)
 * Fewer confusing variable names
-* Fewer issues with "imbalanced" repeated measures data
+* Fewer issues with missing values and "imbalanced" repeated measures data
 
-Strongly recommended reading: the [tidy data vignette](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
 
 tidyr
 ===
 
-The `tidyr` package provides functions to take non-tidy data and make it tidy (or vice versa). It is similar to `reshape` in Stata or `proc transpose` in SAS. Its key functions:
+The `tidyr` package provides functions to take non-tidy data and make it tidy (or vice versa). It is similar to `reshape` in Stata or `varstocases` in SPSS. Key functions:
 
 * `gather`: takes a set of columns and rotates them down to make two new columns: one with the original column name (`key`), and one with the value (`value`)
 * `spread`: inverts of `gather` by taking two columns and rotating them up
-* `separate`: pulls apart one column into multiple
+* `separate`: pulls apart one column into multiple (common with freshly `gather`ed data where values were encoded in column names)
+    + `extract_numeric` does a simple version of this for the common case when you just want to pull out the number part
 
 gather
 ===
@@ -296,7 +377,43 @@ dim(billboard_2000)
 ```
 [1] 24092     7
 ```
-`starts_with` and other helper functions from `dplyr::select` work here too. I could have instead used: `gather(key = week, value = rank, wk1:wk76)` to pull out these continguous columns.
+`starts_with` and other helper functions from `dplyr::select` work here too. Could instead use: `gather(key = week, value = rank, wk1:wk76)` to pull out these continguous columns.
+
+
+gathering better?
+===
+incremental: true
+
+
+```r
+summary(billboard_2000$rank)
+```
+
+```
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+   1.00   26.00   51.00   51.05   76.00  100.00   18785 
+```
+
+We don't want to keep the 18785 rows with missing ranks (i.e. weeks since entering the Top 100 that the song was no longer on the Top 100).
+
+
+gathering better: na.rm
+===
+incremental: true
+
+The argument `na.rm` to `gather` will remove rows with missing ranks.
+
+```r
+billboard_2000 <- billboard_2000_raw %>%
+    gather(key = week, value = rank, starts_with("wk"),
+           na.rm = TRUE)
+summary(billboard_2000$rank)
+```
+
+```
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00   26.00   51.00   51.05   76.00  100.00 
+```
 
 
 separate
@@ -315,13 +432,13 @@ summary(billboard_2000$length)
 
 ```
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  2.600   3.650   3.933   4.040   4.283   7.833 
+  2.600   3.667   3.933   4.031   4.283   7.833 
 ```
 
 extract_numeric
 ===
 
-`tidyr` provides a simple function to grab just the numeric information from a column that mixes text and numbers:
+`tidyr` provides a convenience function to grab just the numeric information from a column that mixes text and numbers:
 
 
 ```r
@@ -332,17 +449,126 @@ summary(billboard_2000$week)
 
 ```
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-   1.00   19.75   38.50   38.50   57.25   76.00 
+   1.00    5.00   10.00   11.47   16.00   65.00 
 ```
 
-For more sophisticated conversion or pattern checking, you'll need to use string-parsing (to be covered later).
+For more sophisticated conversion or pattern checking, you'll need to use string parsing (to be covered later).
+
+
+spread motivation
+===
+
+`spread` is the opposite of `gather`, which you use if you have data for the same observation taking up multiple rows.
+
+Example of data that should be spread:
+
+| **Group** | **Statistic** | **Value** |
+|-------|-----------|------:|
+| A     | Mean      |  1.28 |
+| A     | Median    |   1.0 |
+| A     | SD        |  0.72 |
+| B     | Mean      |  2.81 |
+| B     | Median    |     2 |
+| B     | SD        |  1.33 |
+
+A common cue to use `spread` is you have measurements of different quantities in the same column. 
+
+
+spread illustration
+===
+
+
+```r
+too_long_data <- data.frame(Group = c(rep("A", 3), rep("B", 3)), Statistic = rep(c("Mean", "Median", "SD"), 2), Value = c(1.28, 1.0, 0.72, 2.81, 2, 1.33))
+
+(just_right_data <- too_long_data %>%
+    spread(key = Statistic, value = Value))
+```
+
+```
+  Group Mean Median   SD
+1     A 1.28      1 0.72
+2     B 2.81      2 1.33
+```
+
+
+Charting the charts of 2000: data prep
+===
+
+Let's look at songs that hit #1 at some point and look how they got there vs. the songs that didn't:
+
+
+```r
+# find best rank for each song
+best_rank <- billboard_2000 %>%
+    group_by(artist, track) %>%
+    summarize(min_rank = min(rank),
+              weeks_at_1 = sum(rank == 1)) %>%
+    mutate(`Peak rank` = ifelse(min_rank == 1, "Hit #1", "Didn't #1"))
+
+# merge onto original data
+billboard_2000 <- billboard_2000 %>%
+    left_join(best_rank, by = c("artist", "track"))
+```
+
+Charting the charts of 2000: ggplot2
+===
+
+
+```r
+library(ggplot2)
+billboard_trajectories <- ggplot(
+    data = billboard_2000,
+    aes(x = week, y = rank,
+        group = track, color = `Peak rank`)
+    ) +
+    geom_line(aes(size = `Peak rank`), alpha = 0.4) +
+    # square root time: early weeks more important
+    scale_x_sqrt(breaks = seq(0, 70, 10)) +
+    # want rank 1 on top, not bottom
+    scale_y_reverse() + theme_classic() +
+    scale_color_manual(values = c("black", "red")) +
+    scale_size_manual(values = c(0.25, 1))
+```
+
+Charting the charts of 2000: beauty!
+===
+<img src="slides_week_5-figure/unnamed-chunk-20-1.png" title="plot of chunk unnamed-chunk-20" alt="plot of chunk unnamed-chunk-20" width="1100px" height="500px" />
+
+Observation: there appears to be censoring around week 20 for songs falling out of the top 50 that I'd want to follow up on.
+
+
+Which songs were #1 the most weeks?
+===
+
+
+```r
+billboard_2000 %>%
+    select(artist, track, weeks_at_1) %>%
+    distinct(artist, track, weeks_at_1) %>%
+    arrange(desc(weeks_at_1)) %>%
+    head(5)
+```
+
+```
+Source: local data frame [5 x 3]
+
+               artist                   track weeks_at_1
+                (chr)                   (chr)      (int)
+1     Destiny's Child Independent Women Pa...         11
+2             Santana            Maria, Maria         10
+3 Aguilera, Christina Come On Over Baby (A...          4
+4             Madonna                   Music          4
+5       Savage Garden      I Knew I Loved You          4
+```
+
 
 
 Managing factor variables
 ===
 type: section
 
-Factors are such a common and weird type of vector in R that we need to get to know them a little better.
+Factors are such a common and weird data type in R that we need to get to know them a little better, especially for `ggplot2`.
 
 
 Factor concepts
