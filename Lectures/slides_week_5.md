@@ -15,6 +15,7 @@ Issues around getting data in and out of R and making it analytically ready:
 - Working directories and projects
 - Importing and exporting data
 - Cleaning and reshaping data: `tidyr`
+- Dates and times
 - Controlling factor variables
 
 
@@ -53,9 +54,10 @@ If you're working in a shared Dropbox folder or a similar setup where folders fo
 
 
 ```r
-user_to_dropbox <- "~/Dropbox" # CHANGE ON YOUR MACHINE
-path_in_dropbox <- "CSSS508/our_data_analysis"
-setwd(file.path(user_to_dropbox, path_in_dropbox))
+# CHANGE ON YOUR MACHINE
+individual_path_to_dropbox <- "/Users/rferrell/Dropbox" 
+common_in_dropbox <- "CSSS508/our_data_analysis"
+setwd(file.path(individual_path_to_dropbox, common_in_dropbox))
 ```
 
 
@@ -73,7 +75,7 @@ Better way to deal with working directories: RStudio's **project** feature in th
 Relative paths
 ===
 
-Once you've set the working directory, you should refer to folders and files within using relative paths.
+Once you've set the working directory, you can refer to folders and files within using relative paths.
 
 
 ```r
@@ -208,7 +210,7 @@ Excel files
 
 The simplest thing to do with Excel files (`.xls` or `.xlsx`) is open them up, export to CSV, then import in R --- and compare carefully to make sure everything worked!
 
-For Excel files that might get updated and you want the changes to flow to your analysis, I recommend using an R package such as `readxl` or `openxlsx`.
+For Excel files that might get updated and you want the changes to flow to your analysis, I recommend using an R package such as `readxl` or `openxlsx`. For Google Docs Spreadsheets, there's the `googlesheets` package.
 
 You won't keep text formatting, color, comments, or merged cells so if these mean something in your data (*bad*!), you'll need to get creative.
 
@@ -285,7 +287,7 @@ Initial spot checks
 incremental: true
 
 * Did the last rows/columns from the original file make it in?
-    + If not, you may need to use a different package.
+    + May need to use different package or manually specify range
 * Are the column names in good shape?
     + Modify a `col_names` argument or fix with `rename`
 * Are there "decorative" blank rows or columns to remove?
@@ -307,7 +309,7 @@ incremental: true
 | Other         |      7 |    5 |
 
 * What is an observation?
-    + Count of students from a program of a given gender
+    + A group of students from a program of a given gender
 * What are the variables?
     + Program, gender
 * What are the values?
@@ -326,18 +328,18 @@ View(billboard_2000_raw)
 ```
 
 * What are the **observations** in the data?
-    + Rank per week since entering the Billboard Top 100 per song
+    + Week since entering the Billboard Hot 100 per song
 * What are the **variables** in the data?
-    + Year, artist, track, song length, date entered Top 100, week since first entered Top 100 (**spread over many columns**), rank during week (**spread over many columns**)
+    + Year, artist, track, song length, date entered Hot 100, week since first entered Hot 100 (**spread over many columns**), rank during week (**spread over many columns**)
 * What are the **values** in the data?
-    + e.g. 2000; 3 Doors Down; Kryptonite; 3 minutes 53 seconds; April 8, 2000; Week 3 (**stuck in column labels**); rank 68 (**spread over many columns**)
+    + e.g. 2000; 3 Doors Down; Kryptonite; 3 minutes 53 seconds; April 8, 2000; Week 3 (**stuck in column headings**); rank 68 (**spread over many columns**)
 
 
 tidy data
 ===
 incremental: true
 
-**Tidy data** (long data) are such that:
+**Tidy data** (aka "long data") are such that:
 
 1. The values for a single observation are in their own row.
 2. The values for a single variable are in their own column.
@@ -354,12 +356,13 @@ Why do we want tidy data?
 tidyr
 ===
 
-The `tidyr` package provides functions to take non-tidy data and make it tidy (or vice versa). It is similar to `reshape` in Stata or `varstocases` in SPSS. Key functions:
+The `tidyr` package provides functions to tidy up data, similar to `reshape` in Stata or `varstocases` in SPSS. Key functions:
 
-* `gather`: takes a set of columns and rotates them down to make two new columns: one with the original column name (`key`), and one with the value (`value`)
-* `spread`: inverts of `gather` by taking two columns and rotating them up
-* `separate`: pulls apart one column into multiple (common with freshly `gather`ed data where values were encoded in column names)
-    + `extract_numeric` does a simple version of this for the common case when you just want to pull out the number part
+* `gather`: takes a set of columns and rotates them down to make two new columns: one storing the original column names (`key`), and one with the values in those columns (`value`)
+* `spread`: inverts `gather` by taking two columns and rotating them up
+* `separate`: pulls apart one column into multiple (common with freshly `gather`ed data where values had been embedded in column names)
+    + `extract_numeric` does a simple version of this for the common case when you just want grab the number part
+* `unite`: inverts `separate` by gluing together multiple columns into one character column (less common)
 
 gather
 ===
@@ -394,7 +397,7 @@ summary(billboard_2000$rank)
    1.00   26.00   51.00   51.05   76.00  100.00   18785 
 ```
 
-We don't want to keep the 18785 rows with missing ranks (i.e. weeks since entering the Top 100 that the song was no longer on the Top 100).
+We don't want to keep the 18785 rows with missing ranks (i.e. observations for weeks since entering the Hot 100 that the song was no longer on the Hot 100).
 
 
 gathering better: na.rm
@@ -460,7 +463,7 @@ spread motivation
 
 `spread` is the opposite of `gather`, which you use if you have data for the same observation taking up multiple rows.
 
-Example of data that should be spread:
+Example of data that we probably want to spread (unless we want to plot each statistic in its own facet):
 
 | **Group** | **Statistic** | **Value** |
 |-------|-----------|------:|
@@ -523,13 +526,16 @@ billboard_trajectories <- ggplot(
         group = track, color = `Peak rank`)
     ) +
     geom_line(aes(size = `Peak rank`), alpha = 0.4) +
-    # square root time: early weeks more important
-    scale_x_sqrt(breaks = seq(0, 70, 10)) +
+    # rescale time: early weeks more important
+    scale_x_log10(breaks = seq(0, 70, 10)) +
     # want rank 1 on top, not bottom
     scale_y_reverse() + theme_classic() +
     scale_color_manual(values = c("black", "red")) +
-    scale_size_manual(values = c(0.25, 1))
+    scale_size_manual(values = c(0.25, 1)) +
+    theme(legend.position = c(0.90, 0.25),
+          legend.background = element_rect(fill="transparent"))
 ```
+
 
 Charting the charts of 2000: beauty!
 ===
@@ -547,11 +553,11 @@ billboard_2000 %>%
     select(artist, track, weeks_at_1) %>%
     distinct(artist, track, weeks_at_1) %>%
     arrange(desc(weeks_at_1)) %>%
-    head(5)
+    head(7)
 ```
 
 ```
-Source: local data frame [5 x 3]
+Source: local data frame [7 x 3]
 
                artist                   track weeks_at_1
                 (chr)                   (chr)      (int)
@@ -560,21 +566,101 @@ Source: local data frame [5 x 3]
 3 Aguilera, Christina Come On Over Baby (A...          4
 4             Madonna                   Music          4
 5       Savage Garden      I Knew I Loved You          4
+6     Destiny's Child             Say My Name          3
+7   Iglesias, Enrique             Be With You          3
 ```
 
+Dates and times
+===
+type: section
+
+
+Getting usable dates from Billboard
+===
+
+We have the date the songs first charted, but not the dates for later weeks. We can calculate these now that the data is tidy:
+
+
+```r
+billboard_2000 <- billboard_2000 %>%
+    mutate(date = date.entered + (week - 1) * 7)
+billboard_2000 %>% arrange(artist, track, week) %>%
+    select(artist, date.entered, week, date, rank) %>% head(4)
+```
+
+```
+Source: local data frame [4 x 5]
+
+  artist date.entered  week       date  rank
+   (chr)       (date) (dbl)     (date) (int)
+1  2 Pac   2000-02-26     1 2000-02-26    87
+2  2 Pac   2000-02-26     2 2000-03-04    82
+3  2 Pac   2000-02-26     3 2000-03-11    72
+4  2 Pac   2000-02-26     4 2000-03-18    77
+```
+
+
+Preparing to plot over calendar time
+===
+
+
+```r
+plot_by_day <- ggplot(billboard_2000,
+                      aes(x = date, y = rank, group = track)) +
+    geom_line(size = 0.25, alpha = 0.4) +
+    # just show the month abbreviation label (%b)
+    scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+    scale_y_reverse() + theme_bw() +
+    # add lines for start and end of year:
+    # input as dates, then make numeric for plotting
+    geom_vline(xintercept = as.numeric(as.Date("2000-01-01", "%Y-%m-%d")), col = "red") +
+    geom_vline(xintercept = as.numeric(as.Date("2000-12-31", "%Y-%m-%d")), col = "red")
+```
+
+
+Calendar time plot!
+===
+
+<img src="slides_week_5-figure/unnamed-chunk-24-1.png" title="plot of chunk unnamed-chunk-24" alt="plot of chunk unnamed-chunk-24" width="1100px" height="500px" />
+
+We see some of the entry dates are before 2000 --- presumably songs still charting during 2000 that came out earlier. 
+
+
+Dates and times
+===
+
+To practice working with finer-grained temporal information, let's look at one day of Seattle Police response data:
+
+
+
+
+lubridate
+===
+
+date/time formats in R, posixct, time zones, just use lubridate for date/time math
 
 
 Managing factor variables
 ===
 type: section
 
-Factors are such a common and weird data type in R that we need to get to know them a little better, especially for `ggplot2`.
+
 
 
 Factor concepts
 ===
+incremental: true
 
-Levels, ordering, as.character, as.numeric
+Factors are such a common (and fussy) vector type in R that we need to get to know them a little better when preparing data:
+
+* Order of factor levels controls order of categories in tables, on axes, and in legends in `ggplot2`
+    + Often want to plot in some interpretable or aesthetically pleasing order, e.g. from highest to lowest values -- not **"Alabama first"**
+* Bottom level of a factor is treated as a reference level for regression, and the other levels get their own coefficients
+    + Reference levels are by default alphabetical, which doesn't necessarily coincide with the easiest to understand baseline category
+
+Levels, ordering, reorder, as.character, as.numeric
+
+what model.matrix does to data with factors
 
 
 Reordering factors
