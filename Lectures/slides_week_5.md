@@ -629,15 +629,99 @@ We see some of the entry dates are before 2000 --- presumably songs still charti
 Dates and times
 ===
 
-To practice working with finer-grained temporal information, let's look at one day of Seattle Police response data:
+To practice working with finer-grained temporal information, let's look at one day of Seattle Police response data I downloaded from [data.seattle.gov](http://data.seattle.gov):
 
 
+```r
+spd_raw <- read_csv("https://raw.githubusercontent.com/rebeccaferrell/CSSS508/master/Seattle_Police_Department_911_Incident_Response.csv")
+```
+
+The URL for the above:
+```
+https://raw.githubusercontent.com/rebeccaferrell/CSSS508/
+master/Seattle_Police_Department_911_Incident_Response.csv
+```
+**Your turn**: inspect `spd_raw`. Do the types of all the variables make sense?
 
 
 lubridate
 ===
 
-date/time formats in R, posixct, time zones, just use lubridate for date/time math
+
+```r
+str(spd_raw$`Event Clearance Date`)
+```
+
+```
+ chr [1:706] "03/25/2016 11:58:30 PM" "03/25/2016 11:57:22 PM" ...
+```
+
+We want this to be in a date/time format ("POSIXct"), not character.
+
+
+```r
+# install.packages("lubridate")
+library(lubridate)
+spd <- spd_raw %>% mutate(`Event Clearance Date` = mdy_hms(`Event Clearance Date`, tz = "America/Los_Angeles"))
+str(spd$`Event Clearance Date`)
+```
+
+```
+ POSIXct[1:706], format: "2016-03-25 23:58:30" "2016-03-25 23:57:22" ...
+```
+
+
+Useful date/time functions
+===
+
+
+```r
+demo_dts <- spd$`Event Clearance Date`[1:2]
+(date_only <- as.Date(demo_dts))
+```
+
+```
+[1] "2016-03-26" "2016-03-26"
+```
+
+```r
+(day_of_week_only <- weekdays(demo_dts))
+```
+
+```
+[1] "Friday" "Friday"
+```
+
+```r
+(one_hour_later <- demo_dts + dhours(1))
+```
+
+```
+[1] "2016-03-26 00:58:30 PDT" "2016-03-26 00:57:22 PDT"
+```
+
+
+What time of day were incidents cleared?
+===
+
+
+```r
+spd_times <- spd %>%
+    select(`Initial Type Group`, `Event Clearance Date`) %>%
+    mutate(hour = hour(`Event Clearance Date`))
+
+time_spd_plot <- ggplot(spd_times, aes(x = hour)) +
+    geom_histogram(binwidth = 2) +
+    facet_wrap( ~ `Initial Type Group`) +
+    theme_minimal() +
+    theme(strip.text.x = element_text(size = rel(0.6)))
+```
+
+
+Histogram of SPD event clearances, March 25
+===
+
+<img src="slides_week_5-figure/unnamed-chunk-30-1.png" title="plot of chunk unnamed-chunk-30" alt="plot of chunk unnamed-chunk-30" width="1100px" height="600px" />
 
 
 Managing factor variables
@@ -645,46 +729,159 @@ Managing factor variables
 type: section
 
 
-
-
-Factor concepts
+Factor variables
 ===
 incremental: true
 
 Factors are such a common (and fussy) vector type in R that we need to get to know them a little better when preparing data:
 
-* Order of factor levels controls order of categories in tables, on axes, and in legends in `ggplot2`
-    + Often want to plot in some interpretable or aesthetically pleasing order, e.g. from highest to lowest values -- not **"Alabama first"**
-* Bottom level of a factor is treated as a reference level for regression, and the other levels get their own coefficients
+* Order of factor levels controls order of categories in tables, on axes, in legends, and in facets in `ggplot2`
+    + Often want to plot in interpretable/aesthetically pleasing order, e.g. from highest to lowest values -- not **"Alabama first"**
+* Lowest level of a factor is treated as a reference for regression, and the other levels get their own coefficients
     + Reference levels are by default alphabetical, which doesn't necessarily coincide with the easiest to understand baseline category
 
-Levels, ordering, reorder, as.character, as.numeric
 
-what model.matrix does to data with factors
+SPD incident types: character to factor
+===
+incremental: true
 
 
-Reordering factors
+```r
+str(spd_times$`Initial Type Group`)
+```
+
+```
+ chr [1:706] "THEFT" "THEFT" "TRESPASS" "CRISIS CALL" ...
+```
+
+```r
+spd_times$`Initial Type Group` <- factor(spd_times$`Initial Type Group`)
+str(spd_times$`Initial Type Group`)
+```
+
+```
+ Factor w/ 30 levels "ANIMAL COMPLAINTS",..: 25 25 28 6 24 27 13 12 2 27 ...
+```
+
+```r
+head(as.numeric(spd_times$`Initial Type Group`))
+```
+
+```
+[1] 25 25 28  6 24 27
+```
+
+SPD incident types: releveling by volume
 ===
 
-Notice when you plot factor variables in `ggplot2`, they go in order of the **levels** (typically alphabetical). To improve the plot, we might want to change the order using `reorder`.
+
+```r
+spd_vol <- spd_times %>% group_by(`Initial Type Group`) %>%
+    summarize(n_events = n()) %>% arrange(desc(n_events))
+
+# set levels using order from sorted volume table
+spd_times_2 <- spd_times %>% mutate(`Initial Type Group` = factor(`Initial Type Group`, levels = spd_vol$`Initial Type Group`))
+
+# replot
+time_spd_plot_2 <- ggplot(spd_times_2, aes(x = hour)) +
+    geom_histogram(binwidth = 2) +
+    facet_wrap( ~ `Initial Type Group`) +
+    theme_minimal() +
+    theme(strip.text.x = element_text(size = rel(0.6)))
+```
+
+SPD incident types: better ordered plot
+===
+
+<img src="slides_week_5-figure/unnamed-chunk-33-1.png" title="plot of chunk unnamed-chunk-33" alt="plot of chunk unnamed-chunk-33" width="1100px" height="600px" />
+
+Other ways to reorder
+===
+
+* Another way is through the `reorder` function:
+
+```
+reorder(factor_vector,
+        quantity_to_order_by,
+        function_to_apply_to_quantities_by_factor)
+```
+
+This is especially useful for making legends go from highest to lowest value visually using `max` as your function, or making axis labels go from lowest to highest value using `mean`. 
+* Use `relevel` and use the `ref` argument to change the reference category
+    + Good when fitting regressions where you don't care about the overall ordering, just which level is the reference
+
+
+Reorder legend example: Jay-Z
+===
+
+
+```r
+jayz <- billboard_2000 %>% filter(artist == "Jay-Z") %>%
+    mutate(track = factor(track))
+
+jayz_bad_legend <- ggplot(jayz, aes(x = week, y = rank, group = track, color = track)) +
+    geom_line() + theme_bw() +
+    scale_y_reverse(limits = c(100, 0)) + 
+    theme(legend.position = c(0.80, 0.25),
+          legend.background = element_rect(fill="transparent"))
+```
+
+Jay-Z with bad legend order
+===
+<img src="slides_week_5-figure/unnamed-chunk-35-1.png" title="plot of chunk unnamed-chunk-35" alt="plot of chunk unnamed-chunk-35" width="1100px" height="600px" />
+
+
+Better ordering for Jay-Z
+===
+
+
+```r
+jayz <- jayz %>% mutate(track = reorder(track, rank, min))
+
+jayz_good_legend <- ggplot(jayz, aes(x = week, y = rank, group = track, color = track)) +
+    geom_line() + theme_bw() +
+    scale_y_reverse(limits = c(100, 0)) + 
+    theme(legend.position = c(0.80, 0.25),
+          legend.background = element_rect(fill="transparent"))
+```
+
+
+Jay-Z with good legend order
+===
+<img src="slides_week_5-figure/unnamed-chunk-37-1.png" title="plot of chunk unnamed-chunk-37" alt="plot of chunk unnamed-chunk-37" width="1100px" height="600px" />
+
 
 Dropping unused levels
 ===
 
-Often after subsetting or cleaning you will end up with fewer realized values of the factor than you had originally, but the old levels remain linked to the factor. You can drop unused levels using `droplevels`.
+After subsetting you can end up with fewer realized levels than before, but old levels remain linked and can cause problems for regressions. Drop unused levels from variables or your whole data using `droplevels`.
 
 
-Other sanity checks
-===
+```r
+jayz_biggest <- jayz %>% filter(track %in% c("I Just Wanna Love U ...", "Big Pimpin'"))
+levels(jayz_biggest$track)
+```
 
-* Make lots of plots to look for unusual values or patterns (e.g. impossible percentages outside 0-100, systematically missing years, extreme outliers, certain values more common than expected)
-* For spreadsheet data, do calculations or plots within the spreadsheet and check that values in R match
-* "Off by one" errors?
-* More tools to clean up strings discussed in a few weeks!
+```
+[1] "I Just Wanna Love U ..." "Big Pimpin'"            
+[3] "Anything"                "Do It Again (Put Ya ..."
+[5] "Hey Papi"               
+```
+
+```r
+jayz_biggest <- jayz_biggest %>% droplevels(.)
+levels(jayz_biggest$track)
+```
+
+```
+[1] "I Just Wanna Love U ..." "Big Pimpin'"            
+```
 
 
-Homework
+
+Homework: be a data janitor!
 ===
 type: section
 
-Read in some data, and then get it analytically ready, and make some plots once it's long.
+Start an RStudio project for this homework. Download the data file [FILE] into that folder. Get the data into R, and then clean it up enough so that you can make the following plots:
+
