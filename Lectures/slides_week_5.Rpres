@@ -7,7 +7,7 @@ width: 1100
 height: 750
 
 
-Today's theme: "janitor work"
+Today's theme: "data janitor work"
 ===
 
 Issues around getting data in and out of R and making it analytically ready:
@@ -720,5 +720,14 @@ Homework: be a data janitor!
 ===
 type: section
 
-Start an RStudio project for this homework. Download the data file [FILE] into that folder. Get the data into R, and then clean it up enough so that you can make the following plots:
 
+Homework
+===
+
+You will be working with vote tallies in King County from the 2012 general election. The data are in a 60 MB tab-delimited text file downloaded from the [Washington Secretary of State](https://wei.sos.wa.gov/agency/osos/en/press_and_research/PreviousElections/2012/General-Election/Data/Documents/Forms/AllItems.aspx?RootFolder=%2Fagency%2Fosos%2Fen%2Fpress_and_research%2FPreviousElections%2F2012%2FGeneral-Election%2FData%2FDocuments%2FPrecinct_Results&FolderCTID=0x0120008B9C603856A5C84E89934BDF6A72C2ED&View={DF1C73C5-333F-4F68-8713-AD3007138C66}) and completely unmodified. Your job is to document the process of wrangling this data so that you can make the following plots:
+
+* **Relationship between precinct size and turnout.** Precinct-level scatterplot. On the horizontal axis: count of registered voters. On the vertical axis: voter turnout percentages for the presidential race (total votes for a candidate or write-in, divided by registered voters for each precinct). 
+
+* **Relationship between Democratic support for state and federal executive positions.** Precinct-level scatterplot. On the horizontal axis: percentage of voters supporting Obama in the presidential race. On the vertical axis: percentage of voters supporting Inslee in the gubernatorial race.
+
+Make it look good, and don't include data you shouldn't!

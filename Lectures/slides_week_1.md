@@ -24,30 +24,29 @@ incremental: true
 
 Logistics
 ===
-incremental: true
 
 - Savery 117 on Wednesdays, 3:30-5:20
 - Format: lecture -> short break -> lab exercise (approximately)
 - Materials: <http://rebeccaferrell.github.io/CSSS508>
 - Office hours: TBD, will be in Padelford C-14A
 - Grading:
+    + Final grade: Cr/NC, **60% to get Cr**
     + Homework most weeks (70% of grade), combo of reading and programming
     + Participation = peer grading the HW (30% of grade)
-    + Final grade: Cr/NC, **60% to get Cr**
     + Grades and discussion forums maintained on Canvas page
 
 
 Peer grading, really?!
 ===
-incremental: true
 
 Yes, peer grading...
 
 - Write your reports better knowing others will see them
 - Learn new tricks from reading others' code, "appreciate the little things"
-- You'll get a rubric and are expected to leave constructive comments on Canvas
 - Randomly assigned peers, turnaround time: 1 week (due before next class)
-- Can always talk to me if you want my feedback!
+- You'll get a rubric and are expected to leave constructive comments
+- High scoring assignments will be adapted into keys (with your permission)
+- Talk to me if you want more feedback
 
 
 Getting help on the Canvas forums
@@ -78,11 +77,12 @@ incremental: true
 1. Intro to R, RStudio, and R Markdown
 2. Making awesome plots with `ggplot2`
 3. Summarizing and combining data: `dplyr`
-4. R structures and programming controls
-5. Getting data in and out of R, `tidyr`
-6. Statistical functions and writing your own
-7. String/text processing
-8. Taking requests for final weeks! Tools for temporal or spatial data, presentations with RStudio, scraping data from the web, implement favorite features of other statistical software...
+4. R data structures
+5. Data cleaning: import/export, `tidyr`, dates
+6. Programming and functions
+7. More programming and functions
+8. String/text processing
+9. Taking requests for final weeks!
 
 
 Data sources
@@ -523,7 +523,7 @@ Drawing (ugly) pictures of cars
 hist(cars$speed)
 ```
 
-![plot of chunk unnamed-chunk-9](slides_week_1-figure/unnamed-chunk-9-1.png) 
+![plot of chunk unnamed-chunk-9](slides_week_1-figure/unnamed-chunk-9-1.png)
 
 ***
 
@@ -532,7 +532,7 @@ hist(cars$speed)
 hist(cars$dist)
 ```
 
-![plot of chunk unnamed-chunk-10](slides_week_1-figure/unnamed-chunk-10-1.png) 
+![plot of chunk unnamed-chunk-10](slides_week_1-figure/unnamed-chunk-10-1.png)
 
 
 Drawing (marginally less ugly) pictures of cars
@@ -545,7 +545,7 @@ hist(cars$dist,
      main = "Observed stopping distances of cars")
 ```
 ***
-![plot of chunk unnamed-chunk-12](slides_week_1-figure/unnamed-chunk-12-1.png) 
+![plot of chunk unnamed-chunk-12](slides_week_1-figure/unnamed-chunk-12-1.png)
 
 Doing a little car math
 ===
@@ -583,7 +583,7 @@ abline(h = dist_mean, col = "firebrick")
 abline(v = speed_mean, col = "cornflowerblue")
 ```
 ***
-![plot of chunk unnamed-chunk-15](slides_week_1-figure/unnamed-chunk-15-1.png) 
+![plot of chunk unnamed-chunk-15](slides_week_1-figure/unnamed-chunk-15-1.png)
 
 
 Swiss time
@@ -603,7 +603,7 @@ Looking at everything at once
 pairs(swiss, pch = 8, col = "violet", main = "Pairwise comparisons of Swiss variables")
 ```
 
-![plot of chunk unnamed-chunk-16](slides_week_1-figure/unnamed-chunk-16-1.png) 
+![plot of chunk unnamed-chunk-16](slides_week_1-figure/unnamed-chunk-16-1.png)
 
 
 Linear regression
