@@ -7,7 +7,7 @@ width: 1100
 height: 750
 
 
-Today's theme: data cleaning
+Today's theme: "data janitor work"
 ===
 
 Issues around getting data in and out of R and making it analytically ready:
@@ -15,13 +15,13 @@ Issues around getting data in and out of R and making it analytically ready:
 - Working directories and projects
 - Importing and exporting data
 - Cleaning and reshaping data: `tidyr`
+- Dates and times
 - Controlling factor variables
 
 
 Directories
 ===
 type: section
-
 
 Your working directory
 ===
@@ -48,9 +48,10 @@ Dropboxes
 If you're working in a shared Dropbox folder or a similar setup where folders for different users have a common structure after some point, something like this can be a good idea:
 
 ```{r, eval=FALSE}
-user_to_dropbox <- "~/Dropbox" # CHANGE ON YOUR MACHINE
-path_in_dropbox <- "CSSS508/our_data_analysis"
-setwd(file.path(user_to_dropbox, path_in_dropbox))
+# CHANGE ON YOUR MACHINE
+individual_path_to_dropbox <- "/Users/rferrell/Dropbox" 
+common_in_dropbox <- "CSSS508/our_data_analysis"
+setwd(file.path(individual_path_to_dropbox, common_in_dropbox))
 ```
 
 
@@ -68,7 +69,7 @@ Better way to deal with working directories: RStudio's **project** feature in th
 Relative paths
 ===
 
-Once you've set the working directory, you should refer to folders and files within using relative paths.
+Once you've set the working directory, you can refer to folders and files within using relative paths.
 
 ```{r, eval=FALSE}
 library(ggplot2)
@@ -85,10 +86,22 @@ Importing and exporting data
 type: section
 
 
+Special data access packages
+===
+
+Are you working with a popular data source? Try Googling to see if it has a devoted R package on CRAN or on Github (use `devtools::install_github` for these). Examples:
+
+* `WDI`: World Development Indicators (World Bank)
+* `WHO`: World Health Organization API
+* `censusapi`: Census API
+* `acs`: American Community Survey
+* `quantmod`: financial data from Yahoo, FRED, Google
+
+
 Delimited text files
 ===
 
-The easiest way to work with external data is for it to be stored in a delimited text file, e.g. comma-separated values (**csv**) or tab-separated values (**tsv**).
+Besides a package, the easiest way to work with external data is for it to be stored in a delimited text file, e.g. comma-separated values (**csv**) or tab-separated values (**tsv**).
 
 ```
 "Subject","Depression","Sex","Week","HamD","Imipramine"
@@ -106,12 +119,13 @@ The easiest way to work with external data is for it to be stored in a delimited
 readr
 ===
 
-R has a variety of built-in functions for importing data stored in text files, like `read.table` and `read.csv`. However, I recommend using the versions in the `readr` package instead: `read_csv`, `read_tsv`, and `read_delim`:
+R has a variety of built-in functions for importing data stored in text files, like `read.table` and `read.csv`. I recommend using the versions in the `readr` package instead: `read_csv`, `read_tsv`, and `read_delim`:
 
 - Faster!
 - Better defaults (e.g. doesn't automatically convert character data to factors)
 - A little smarter about dates and times
 - Handy function `problems()` you can run if there are errors
+
 
 readr importing example
 ===
@@ -124,15 +138,49 @@ Let's import some data about song ranks on the Billboard Hot 100 back in 2000:
 billboard_2000_raw <- read_csv(file = "https://raw.githubusercontent.com/hadley/tidyr/master/vignettes/billboard.csv")
 ```
 
+The data URL with a line break for readability:
+```
+https://raw.githubusercontent.com/hadley/tidyr/master/
+vignettes/billboard.csv
+```
+
+Did everything go OK?
+===
+
+Look at the data types for the last few columns:
+
+```{r}
+# str(billboard_2000_raw)
+str(billboard_2000_raw[, 65:ncol(billboard_2000_raw)])
+```
+
+
+What went wrong?
+===
+incremental: true
+
+`readr` uses the values in the first 1000 rows to guess the type of the column (integer, logical, numeric, character). There are not many songs in the data that charted for 60+ weeks --- and none in the first 1000 that charted for 66+ weeks! 
+
+To be safe, `readr` assumed the `wk66`-`wk76` columns were character. Use the `col_types` argument to fix this:
+
+```{r, cache=TRUE}
+# paste is a concatenation function
+# i = integer, c = character, D = date
+# rep("i", 76) does the 76 weeks of integer ranks
+bb_types <- paste(c("icccD", rep("i", 76)), collapse="")
+
+billboard_2000_raw <- read_csv(file = "https://raw.githubusercontent.com/hadley/tidyr/master/vignettes/billboard.csv", col_types = bb_types)
+```
+
 
 Excel files
 ===
 
 The simplest thing to do with Excel files (`.xls` or `.xlsx`) is open them up, export to CSV, then import in R --- and compare carefully to make sure everything worked!
 
-For Excel files that might get updated and you want the changes to flow to your analysis, I recommend using an R package such as `readxl` or `openxlsx`.
+For Excel files that might get updated and you want the changes to flow to your analysis, I recommend using an R package such as `readxl` or `openxlsx`. For Google Docs Spreadsheets, there's the `googlesheets` package.
 
-No matter what, you won't keep text formatting, color, comments, or merged cells so if these mean something in your data (*bad*!), you'll need to get creative.
+You won't keep text formatting, color, comments, or merged cells so if these mean something in your data (*bad*!), you'll need to get creative.
 
 
 write_csv, write_tsv, write_delim
@@ -150,7 +198,7 @@ This saved the data we pulled off the web in a file called "billboard_data.csv" 
 Saving in R formats
 ===
 
-CSV files drop special R metadata, such as whether a variable is a character or factor. You can save data or other objects (lists, etc.) in R formats to preserve this.
+Exporting to a CSV drops R metadata, such as whether a variable is a character or factor. You can save objects (data frames, lists, etc.) in R formats to preserve this.
 
 * `.Rds` format:
     + Used for single objects, doesn't save original the object name
@@ -180,7 +228,7 @@ temp <- structure(list(speed = c(4, 4, 7, 7, 8, 9, 10, 10), dist = c(2,
 Reading in data from other software
 ===
 
-Working with Stata or SPSS users? You can use a package to bring in their data:
+Working with Stata or SPSS users? You can use a package to bring in their saved data files:
 
 * `foreign` for Stata, SPSS, Minitab
 * `sas7bdat` for SAS
@@ -193,73 +241,86 @@ Cleaning up data
 type: section
 
 
-Initial checks
-===
-
-* Did the last rows/columns from the original file make it in?
-    + If not, you may need to use a different package.
-* Are the column names in good shape?
-    + Modify a `col_names` argument or fix with `rename`
-* Are there "decorative" blank rows to remove?
-    + `filter` out those rows
-* How are missing values represented: `NA`, blank, period, `999`?
-    + Use `ifelse` to fix these (perhaps *en masse* with looping)
-* Are there character data (e.g. ZIP codes with leading zeroes) being incorrectly represented as numeric?
-    + Modify `col_types` argument
-
-
-Observations, variables, values
+Initial spot checks
 ===
 incremental: true
 
-Look at the Billboard data:
+* Did the last rows/columns from the original file make it in?
+    + May need to use different package or manually specify range
+* Are the column names in good shape?
+    + Modify a `col_names` argument or fix with `rename`
+* Are there "decorative" blank rows or columns to remove?
+    + `filter` or `select` out those rows/columns
+* How are missing values represented: `NA`, blank, period, `999`?
+    + Use `mutate` with `ifelse` to fix these (perhaps *en masse* with looping)
+* Are there character data (e.g. ZIP codes with leading zeroes) being incorrectly represented as numeric or vice versa?
+    + Modify `col_types` argument, or use `mutate` and `as.numeric`
+
+
+"Pretty-messy" data (like "skinny-fat")
+===
+incremental: true
+
+| **Program**       | **Female** | **Male** |
+|---------------|-------:|-----:|
+| Evans School  |     10 |    4 |
+| Public Health |      1 |    3 |
+| Other         |      7 |    5 |
+
+* What is an observation?
+    + A group of students from a program of a given gender
+* What are the variables?
+    + Program, gender
+* What are the values?
+    + Program: Evans School, Public Health, Other
+    + Gender: Female, Male -- **in the column headings, not its own column!**
+    + Count: **spread over two columns!**
+
+
+Billboard is just "ugly-messy"
+===
+incremental: true
 
 ```{r, eval=FALSE}
 View(billboard_2000_raw)
 ```
 
-* What are the **variables** in the data?
 * What are the **observations** in the data?
+    + Week since entering the Billboard Hot 100 per song
+* What are the **variables** in the data?
+    + Year, artist, track, song length, date entered Hot 100, week since first entered Hot 100 (**spread over many columns**), rank during week (**spread over many columns**)
 * What are the **values** in the data?
-
-
-Billboard data
-===
-incremental: true
-
-* **Variables**:
-    + Year, artist, track, song length, date entered the top 100, week since entering, rank during week
-* **Observations**:
-    + Rank per week since entering per track
-* **Values**:
-    + e.g. 2000; 3 Doors Down; Kryptonite; 3 minutes 53 seconds; April 8, 2000; Week 3; rank 68
+    + e.g. 2000; 3 Doors Down; Kryptonite; 3 minutes 53 seconds; April 8, 2000; Week 3 (**stuck in column headings**); rank 68 (**spread over many columns**)
 
 
 tidy data
 ===
 incremental: true
 
-**Tidy data** (long data) are such that each observation has its own row, each variable has its own column, and the observations are all of the saame nature.
+**Tidy data** (aka "long data") are such that:
 
-The Billboard data are *not* tidy.
+1. The values for a single observation are in their own row.
+2. The values for a single variable are in their own column.
+3. The observations are all of the same nature.
 
 Why do we want tidy data?
 
 * Required for plotting in `ggplot2`
 * Required for many types of statistical procedures (e.g. hierarchical or mixed effects models)
 * Fewer confusing variable names
-* Fewer issues with "imbalanced" repeated measures data
+* Fewer issues with missing values and "imbalanced" repeated measures data
 
-Strongly recommended reading: the [tidy data vignette](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
 
 tidyr
 ===
 
-The `tidyr` package provides functions to take non-tidy data and make it tidy (or vice versa). It is similar to `reshape` in Stata or `proc transpose` in SAS. Its key functions:
+The `tidyr` package provides functions to tidy up data, similar to `reshape` in Stata or `varstocases` in SPSS. Key functions:
 
-* `gather`: takes a set of columns and rotates them down to make two new columns: one with the original column name (`key`), and one with the value (`value`)
-* `spread`: inverts of `gather` by taking two columns and rotating them up
-* `separate`: pulls apart one column into multiple
+* `gather`: takes a set of columns and rotates them down to make two new columns: one storing the original column names (`key`), and one with the values in those columns (`value`)
+* `spread`: inverts `gather` by taking two columns and rotating them up
+* `separate`: pulls apart one column into multiple (common with freshly `gather`ed data where values had been embedded in column names)
+    + `extract_numeric` does a simple version of this for the common case when you just want grab the number part
+* `unite`: inverts `separate` by gluing together multiple columns into one character column (less common)
 
 gather
 ===
@@ -272,7 +333,31 @@ billboard_2000 <- billboard_2000_raw %>%
     gather(key = week, value = rank, starts_with("wk"))
 dim(billboard_2000)
 ```
-`starts_with` and other helper functions from `dplyr::select` work here too. I could have instead used: `gather(key = week, value = rank, wk1:wk76)` to pull out these continguous columns.
+`starts_with` and other helper functions from `dplyr::select` work here too. Could instead use: `gather(key = week, value = rank, wk1:wk76)` to pull out these continguous columns.
+
+
+gathering better?
+===
+incremental: true
+
+```{r}
+summary(billboard_2000$rank)
+```
+
+We don't want to keep the `r sum(is.na(billboard_2000$rank))` rows with missing ranks (i.e. observations for weeks since entering the Hot 100 that the song was no longer on the Hot 100).
+
+
+gathering better: na.rm
+===
+incremental: true
+
+The argument `na.rm` to `gather` will remove rows with missing ranks.
+```{r}
+billboard_2000 <- billboard_2000_raw %>%
+    gather(key = week, value = rank, starts_with("wk"),
+           na.rm = TRUE)
+summary(billboard_2000$rank)
+```
 
 
 separate
@@ -291,7 +376,7 @@ summary(billboard_2000$length)
 extract_numeric
 ===
 
-`tidyr` provides a simple function to grab just the numeric information from a column that mixes text and numbers:
+`tidyr` provides a convenience function to grab just the numeric information from a column that mixes text and numbers:
 
 ```{r}
 billboard_2000 <- billboard_2000 %>%
@@ -299,44 +384,350 @@ billboard_2000 <- billboard_2000 %>%
 summary(billboard_2000$week)
 ```
 
-For more sophisticated conversion or pattern checking, you'll need to use string-parsing (to be covered later).
+For more sophisticated conversion or pattern checking, you'll need to use string parsing (to be covered later).
+
+
+spread motivation
+===
+
+`spread` is the opposite of `gather`, which you use if you have data for the same observation taking up multiple rows.
+
+Example of data that we probably want to spread (unless we want to plot each statistic in its own facet):
+
+| **Group** | **Statistic** | **Value** |
+|-------|-----------|------:|
+| A     | Mean      |  1.28 |
+| A     | Median    |   1.0 |
+| A     | SD        |  0.72 |
+| B     | Mean      |  2.81 |
+| B     | Median    |     2 |
+| B     | SD        |  1.33 |
+
+A common cue to use `spread` is you have measurements of different quantities in the same column. 
+
+
+spread illustration
+===
+
+```{r}
+too_long_data <- data.frame(Group = c(rep("A", 3), rep("B", 3)), Statistic = rep(c("Mean", "Median", "SD"), 2), Value = c(1.28, 1.0, 0.72, 2.81, 2, 1.33))
+
+(just_right_data <- too_long_data %>%
+    spread(key = Statistic, value = Value))
+```
+
+
+Charting the charts of 2000: data prep
+===
+
+Let's look at songs that hit #1 at some point and look how they got there vs. the songs that didn't:
+
+```{r}
+# find best rank for each song
+best_rank <- billboard_2000 %>%
+    group_by(artist, track) %>%
+    summarize(min_rank = min(rank),
+              weeks_at_1 = sum(rank == 1)) %>%
+    mutate(`Peak rank` = ifelse(min_rank == 1, "Hit #1", "Didn't #1"))
+
+# merge onto original data
+billboard_2000 <- billboard_2000 %>%
+    left_join(best_rank, by = c("artist", "track"))
+```
+
+Charting the charts of 2000: ggplot2
+===
+
+```{r}
+library(ggplot2)
+billboard_trajectories <- ggplot(
+    data = billboard_2000,
+    aes(x = week, y = rank,
+        group = track, color = `Peak rank`)
+    ) +
+    geom_line(aes(size = `Peak rank`), alpha = 0.4) +
+    # rescale time: early weeks more important
+    scale_x_log10(breaks = seq(0, 70, 10)) +
+    # want rank 1 on top, not bottom
+    scale_y_reverse() + theme_classic() +
+    scale_color_manual(values = c("black", "red")) +
+    scale_size_manual(values = c(0.25, 1)) +
+    theme(legend.position = c(0.90, 0.25),
+          legend.background = element_rect(fill="transparent"))
+```
+
+
+Charting the charts of 2000: beauty!
+===
+```{r, cache=TRUE, echo=FALSE, fig.width = 10, fig.height = 4.5, dpi=300, out.width="1100px", out.height="500px"}
+billboard_trajectories
+```
+
+Observation: there appears to be censoring around week 20 for songs falling out of the top 50 that I'd want to follow up on.
+
+
+Which songs were #1 the most weeks?
+===
+
+```{r}
+billboard_2000 %>%
+    select(artist, track, weeks_at_1) %>%
+    distinct(artist, track, weeks_at_1) %>%
+    arrange(desc(weeks_at_1)) %>%
+    head(7)
+```
+
+Dates and times
+===
+type: section
+
+
+Getting usable dates from Billboard
+===
+
+We have the date the songs first charted, but not the dates for later weeks. We can calculate these now that the data is tidy:
+
+```{r}
+billboard_2000 <- billboard_2000 %>%
+    mutate(date = date.entered + (week - 1) * 7)
+billboard_2000 %>% arrange(artist, track, week) %>%
+    select(artist, date.entered, week, date, rank) %>% head(4)
+```
+
+
+Preparing to plot over calendar time
+===
+
+```{r}
+plot_by_day <- ggplot(billboard_2000,
+                      aes(x = date, y = rank, group = track)) +
+    geom_line(size = 0.25, alpha = 0.4) +
+    # just show the month abbreviation label (%b)
+    scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+    scale_y_reverse() + theme_bw() +
+    # add lines for start and end of year:
+    # input as dates, then make numeric for plotting
+    geom_vline(xintercept = as.numeric(as.Date("2000-01-01", "%Y-%m-%d")), col = "red") +
+    geom_vline(xintercept = as.numeric(as.Date("2000-12-31", "%Y-%m-%d")), col = "red")
+```
+
+
+Calendar time plot!
+===
+
+```{r, cache=TRUE, echo=FALSE, fig.width = 10, fig.height = 4.5, dpi=300, out.width="1100px", out.height="500px"}
+plot_by_day
+```
+
+We see some of the entry dates are before 2000 --- presumably songs still charting during 2000 that came out earlier. 
+
+
+Dates and times
+===
+
+To practice working with finer-grained temporal information, let's look at one day of Seattle Police response data I downloaded from [data.seattle.gov](http://data.seattle.gov):
+
+```{r, cache=TRUE}
+spd_raw <- read_csv("https://raw.githubusercontent.com/rebeccaferrell/CSSS508/master/Seattle_Police_Department_911_Incident_Response.csv")
+```
+
+The URL for the above:
+```
+https://raw.githubusercontent.com/rebeccaferrell/CSSS508/
+master/Seattle_Police_Department_911_Incident_Response.csv
+```
+**Your turn**: inspect `spd_raw`. Do the types of all the variables make sense?
+
+
+lubridate
+===
+
+```{r}
+str(spd_raw$`Event Clearance Date`)
+```
+
+We want this to be in a date/time format ("POSIXct"), not character.
+
+```{r}
+# install.packages("lubridate")
+library(lubridate)
+spd <- spd_raw %>% mutate(`Event Clearance Date` = mdy_hms(`Event Clearance Date`, tz = "America/Los_Angeles"))
+str(spd$`Event Clearance Date`)
+```
+
+
+Useful date/time functions
+===
+
+```{r}
+demo_dts <- spd$`Event Clearance Date`[1:2]
+(date_only <- as.Date(demo_dts))
+(day_of_week_only <- weekdays(demo_dts))
+(one_hour_later <- demo_dts + dhours(1))
+```
+
+
+What time of day were incidents cleared?
+===
+
+```{r, cache=TRUE}
+spd_times <- spd %>%
+    select(`Initial Type Group`, `Event Clearance Date`) %>%
+    mutate(hour = hour(`Event Clearance Date`))
+
+time_spd_plot <- ggplot(spd_times, aes(x = hour)) +
+    geom_histogram(binwidth = 2) +
+    facet_wrap( ~ `Initial Type Group`) +
+    theme_minimal() +
+    theme(strip.text.x = element_text(size = rel(0.6)))
+```
+
+
+Histogram of SPD event clearances, March 25
+===
+
+```{r, cache=TRUE, echo=FALSE, fig.width = 10, fig.height = 5.4, dpi=300, out.width="1100px", out.height="600px"}
+time_spd_plot
+```
 
 
 Managing factor variables
 ===
 type: section
 
-Factors are such a common and weird type of vector in R that we need to get to know them a little better.
+
+Factor variables
+===
+incremental: true
+
+Factors are such a common (and fussy) vector type in R that we need to get to know them a little better when preparing data:
+
+* Order of factor levels controls order of categories in tables, on axes, in legends, and in facets in `ggplot2`
+    + Often want to plot in interpretable/aesthetically pleasing order, e.g. from highest to lowest values -- not **"Alabama first"**
+* Lowest level of a factor is treated as a reference for regression, and the other levels get their own coefficients
+    + Reference levels are by default alphabetical, which doesn't necessarily coincide with the easiest to understand baseline category
 
 
-Factor concepts
+SPD incident types: character to factor
+===
+incremental: true
+
+```{r}
+str(spd_times$`Initial Type Group`)
+spd_times$`Initial Type Group` <- factor(spd_times$`Initial Type Group`)
+str(spd_times$`Initial Type Group`)
+head(as.numeric(spd_times$`Initial Type Group`))
+```
+
+SPD incident types: releveling by volume
 ===
 
-Levels, ordering, as.character, as.numeric
+```{r, cache=TRUE}
+spd_vol <- spd_times %>% group_by(`Initial Type Group`) %>%
+    summarize(n_events = n()) %>% arrange(desc(n_events))
 
+# set levels using order from sorted volume table
+spd_times_2 <- spd_times %>% mutate(`Initial Type Group` = factor(`Initial Type Group`, levels = spd_vol$`Initial Type Group`))
 
-Reordering factors
+# replot
+time_spd_plot_2 <- ggplot(spd_times_2, aes(x = hour)) +
+    geom_histogram(binwidth = 2) +
+    facet_wrap( ~ `Initial Type Group`) +
+    theme_minimal() +
+    theme(strip.text.x = element_text(size = rel(0.6)))
+```
+
+SPD incident types: better ordered plot
 ===
 
-Notice when you plot factor variables in `ggplot2`, they go in order of the **levels** (typically alphabetical). To improve the plot, we might want to change the order using `reorder`.
+```{r, cache=TRUE, echo=FALSE, fig.width = 10, fig.height = 5.4, dpi=300, out.width="1100px", out.height="600px"}
+time_spd_plot_2
+```
+
+Other ways to reorder
+===
+
+* Another way is through the `reorder` function:
+
+```
+reorder(factor_vector,
+        quantity_to_order_by,
+        function_to_apply_to_quantities_by_factor)
+```
+
+This is especially useful for making legends go from highest to lowest value visually using `max` as your function, or making axis labels go from lowest to highest value using `mean`. 
+* Use `relevel` and use the `ref` argument to change the reference category
+    + Good when fitting regressions where you don't care about the overall ordering, just which level is the reference
+
+
+Reorder legend example: Jay-Z
+===
+
+```{r, cache=TRUE}
+jayz <- billboard_2000 %>% filter(artist == "Jay-Z") %>%
+    mutate(track = factor(track))
+
+jayz_bad_legend <- ggplot(jayz, aes(x = week, y = rank, group = track, color = track)) +
+    geom_line() + theme_bw() +
+    scale_y_reverse(limits = c(100, 0)) + 
+    theme(legend.position = c(0.80, 0.25),
+          legend.background = element_rect(fill="transparent"))
+```
+
+Jay-Z with bad legend order
+===
+```{r, cache=TRUE, echo=FALSE, fig.width = 10, fig.height = 5.4, dpi=300, out.width="1100px", out.height="600px"}
+jayz_bad_legend
+```
+
+
+Better ordering for Jay-Z
+===
+
+```{r, cache=TRUE}
+jayz <- jayz %>% mutate(track = reorder(track, rank, min))
+
+jayz_good_legend <- ggplot(jayz, aes(x = week, y = rank, group = track, color = track)) +
+    geom_line() + theme_bw() +
+    scale_y_reverse(limits = c(100, 0)) + 
+    theme(legend.position = c(0.80, 0.25),
+          legend.background = element_rect(fill="transparent"))
+```
+
+
+Jay-Z with good legend order
+===
+```{r, cache=TRUE, echo=FALSE, fig.width = 10, fig.height = 5.4, dpi=300, out.width="1100px", out.height="600px"}
+jayz_good_legend
+```
+
 
 Dropping unused levels
 ===
 
-Often after subsetting or cleaning you will end up with fewer realized values of the factor than you had originally, but the old levels remain linked to the factor. You can drop unused levels using `droplevels`.
+After subsetting you can end up with fewer realized levels than before, but old levels remain linked and can cause problems for regressions. Drop unused levels from variables or your whole data using `droplevels`.
+
+```{r}
+jayz_biggest <- jayz %>% filter(track %in% c("I Just Wanna Love U ...", "Big Pimpin'"))
+levels(jayz_biggest$track)
+jayz_biggest <- jayz_biggest %>% droplevels(.)
+levels(jayz_biggest$track)
+```
 
 
-Other sanity checks
+
+Homework: be a data janitor!
 ===
-
-* Make lots of plots to look for unusual values or patterns (e.g. impossible percentages outside 0-100, systematically missing years, extreme outliers, certain values more common than expected)
-* For spreadsheet data, do calculations or plots within the spreadsheet and check that values in R match
-* "Off by one" errors?
-* More tools to clean up strings discussed in a few weeks!
+type: section
 
 
 Homework
 ===
-type: section
 
-Read in some data, and then get it analytically ready, and make some plots once it's long.
+You will be working with vote tallies in King County from the 2012 general election. The data are in a 60 MB tab-delimited text file downloaded from the [Washington Secretary of State](https://wei.sos.wa.gov/agency/osos/en/press_and_research/PreviousElections/2012/General-Election/Data/Documents/Forms/AllItems.aspx?RootFolder=%2Fagency%2Fosos%2Fen%2Fpress_and_research%2FPreviousElections%2F2012%2FGeneral-Election%2FData%2FDocuments%2FPrecinct_Results&FolderCTID=0x0120008B9C603856A5C84E89934BDF6A72C2ED&View={DF1C73C5-333F-4F68-8713-AD3007138C66}) and completely unmodified. Your job is to document the process of wrangling this data so that you can make the following plots:
+
+* **Relationship between precinct size and turnout.** Precinct-level scatterplot. On the horizontal axis: count of registered voters. On the vertical axis: voter turnout percentages for the presidential race (total votes for a candidate or write-in, divided by registered voters for each precinct). 
+
+* **Relationship between Democratic support for state and federal executive positions.** Precinct-level scatterplot. On the horizontal axis: percentage of voters supporting Obama in the presidential race. On the vertical axis: percentage of voters supporting Inslee in the gubernatorial race.
+
+Make it look good, and don't include data you shouldn't!
