@@ -133,7 +133,7 @@ Killer feature of R/RStudio is ease of making R Markdown files:
 
 RStudio
 ===
-Open up RStudio now, and choose *File* > *New File* > *R Script*. Let's get oriented with the interface:
+Open up RStudio now ([CSSCR lab instructions](https://rebeccaferrell.github.io/CSSS508/CSSCR.html)), and choose *File* > *New File* > *R Script*. Let's get oriented with the interface:
 
 - Top left: code editor pane, viewing data (tabbed)
 - Bottom left: console for running code (`>` prompt)
