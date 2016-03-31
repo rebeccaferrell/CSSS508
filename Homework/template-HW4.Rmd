@@ -17,7 +17,7 @@ For this assignment, you will:
 * Use matrix algebra to fit a linear regression model
 * Compare your results with R's built-in regression function
 
-You will be walked through these steps. For each code chunk, fill in code and change it from `eval=FALSE` to `eval=TRUE` when you have it working.
+You will be walked through these steps. For each code chunk, fill in code and change it from `eval=FALSE` to `eval=TRUE` when you have it working. You will need to at minimum complete the object assignment steps `<-` that have been left unfinished, but you may also occasionally need to add in an extra line or two of code to tweak things like row and column names of these objects.
 
 # Simulating data
 
@@ -61,7 +61,16 @@ $$\text{UW Calculus I grade}_i = 0.3 + 0.7 \cdot \text{HS math GPA}_i + 0.3 \cdo
 $$\varepsilon_i \sim \text{Normal}(\text{mean}=0, \text{SD}=0.5)$$
 
 ```{r simulate_outcome, cache=TRUE}
-uw_calculus_gpa <- 0.3 + 0.7 * hs_math_gpa + 0.3 * hs_calculus + 0.1 * uw_precalc + rnorm(n, mean = 0, sd = 0.5)
+true_beta <- c("Intercept" = 0.3,
+               "hs_math_gpa" = 0.7,
+               "hs_calculus" = 0.3,
+               "uw_precalc" = 0.1)
+true_sigma <- 0.5
+uw_calculus_gpa <- true_beta["Intercept"] +
+    true_beta["hs_math_gpa"] * hs_math_gpa +
+    true_beta["hs_calculus"] * hs_calculus +
+    true_beta["uw_precalc"] * uw_precalc +
+    rnorm(n, mean = 0, sd = true_sigma)
 # we don't see exact GPAs, just nearest 0.1
 uw_calculus_gpa <- round(uw_calculus_gpa, 1)
 # truncate under 0.7 or over 4.0
@@ -93,6 +102,8 @@ For ordinary least squares linear regression, we encode our independent variable
 
 $$\mathbf{X} = \left[ \begin{array}{ccccc} 1 & x_{11} & x_{12} & \ldots & x_{1p} \\ 1 & x_{21} & x_{22} & \ldots & x_{2p} \\ 1 & x_{31} & x_{32} & \ldots & x_{3p}\\\ldots & \ldots & \ldots & \ldots & \ldots \\ 1 & x_{n1} & x_{n2} & \ldots & x_{np} \end{array} \right]$$
 
+Each of the columns $x_{.1}, x_{.2}, \ldots, x_{.p}$ contains one of the independent variables.
+
 The outcome vector $\mathbf{y}$ looks like:
 
 $$\mathbf{y} = \left[ \begin{array}{c} y_1 \\ y_2 \\ y_3 \\ \ldots \\ y_n \end{array} \right]$$
@@ -111,11 +122,11 @@ We estimate the variance of the residual noise $\hat{\sigma}^2$ (mean squared er
 
 $$\hat{\sigma}^2 = \frac{(\mathbf{y} - \mathbf{X} \cdot \hat{\mathbf{\beta}})^T \cdot (\mathbf{y} - \mathbf{X} \cdot \hat{\mathbf{\beta}})}{n - p - 1}$$
 
-We get estimated variances for linear regression coefficients using the following formula:
+We get estimated covariances for linear regression coefficient estimates using the following formula:
 
 $$\widehat{\text{Var}}(\hat{\mathbf{\beta}}) = \hat{\sigma}^2  \left(\mathbf{X}^T \cdot \mathbf{X} \right)^{-1}$$
 
-We then take the square root of the diagonal of $\widehat{\text{Var}}(\hat{\mathbf{\beta}})$ to get the standard errors for each coefficient. (The off-diagonal terms are covariances.)
+We then take the square root of the diagonal of $\widehat{\text{Var}}(\hat{\mathbf{\beta}})$ to get the standard errors for each coefficient. (The off-diagonal terms are estimated covariances between parameter estimates, which is closely related to the estimated correlations.)
 
 # Setting up the design matrix and outcome
 
@@ -156,7 +167,7 @@ With $\hat{\mathbf{\beta}}$, you can compute the residuals $\mathbf{y} - \mathbf
 residuals <- 
 ```
 
-Now let's calculate the residual variance $\hat{\sigma}^2$. This has $n-p-1$ in the denominator, so let's compute $p$ while we're at it. You already *know* $p=3$, but instead of hard-coding this, use a function to compute it as the number of columns of the design matrix minus 1. That way, if had you added or deleted a column, the math would still be correct. Additionally, after you've calculated the residual variance, I've put `as.numeric()` at the end to convert it to a single scalar number instead of a 1 by 1 matrix.
+Now let's calculate the estimated residual variance $\hat{\sigma}^2$. This has $n-p-1$ in the denominator, so let's compute $p$ while we're at it. You already *know* $p=3$, but instead of hard-coding this, use a function to compute it as the number of columns of the design matrix minus 1. (That way, if had you added or deleted a column, the math would still be correct!) Additionally, after you've calculated the residual variance, I've put `as.numeric()` at the end to convert it to a single scalar number instead of a 1 by 1 matrix.
 
 ```{r residual_variance, eval=FALSE}
 # FILL THIS IN AND DELETE THIS COMMENT
@@ -165,14 +176,14 @@ residual_var <-
 residual_var <- as.numeric(residual_var)
 ```
 
-Next, find the variance matrix $\widehat{\text{Var}}(\hat{\mathbf{\beta}})$ using $A$ and $\hat{\sigma}^2$. (We needed the `as.numeric()` step above because otherwise we would be multiplying together two matrices whose dimensions can't be multiplied.)
+Next, find the estimated covariance matrix of the coefficient estimates $\widehat{\text{Var}}(\hat{\mathbf{\beta}})$ using $A$ and $\hat{\sigma}^2$. (Note: we needed the `as.numeric()` step above because otherwise `residual_var` is a 1 by 1 matrix, and we would be multiplying together two matrices whose dimensions can't be multiplied. `as.numeric()` converts it to a scalar that multiplies all the entries, which is what we want.)
 
-```{r beta_variance, eval=FALSE}
+```{r beta_covariance, eval=FALSE}
 # FILL THIS IN AND DELETE THIS COMMENT
-beta_var <-
+beta_covar <-
 ```
 
-Finally, we go from variance matrix $\widehat{\text{Var}}(\hat{\mathbf{\beta}})$ to standard errors by taking the square root of its diagonal.
+Finally, we go from estimated covariance matrix $\widehat{\text{Var}}(\hat{\mathbf{\beta}})$ to standard errors by taking the square root of its diagonal.
 
 ```{r std_err_beta, eval=FALSE}
 # FILL THIS IN AND DELETE THIS COMMENT
@@ -181,7 +192,13 @@ beta_SE <-
 
 # Comparing results
 
-Now, let's make a matrix comparing the fitted parameters. Make the second column of the matrix have name "manual" and the rows be the values of $\hat{\mathbf{\beta}}$ you computed. Make the second column of the matrix have name "lm" and the rows be the values of the fitted parameters using `lm()` from before. Use the `pander` package to display a nice formatted table. If everything went right, these values should match!
+Now, let's make a 4 row by 3 column matrix comparing the "true" values used to generate the data and fitted parameters using two methods:
+
+* Make the first column of the matrix have the name "Truth" and contain the true values of the coefficients.
+* Make the second column of the matrix have name "Manual" and the rows be the values of $\hat{\mathbf{\beta}}$ you computed.
+* Make the third column of the matrix have name "lm" and the rows be the values of the fitted parameters using `lm()` from before.
+
+Use the `pander` package to display a nice formatted table. If everything went right, the two columns of fitted values should equal each other, and will be close to but not exactly the truth. You may want to modify `rownames` of `beta_compare`.
 
 ```{r compare_beta, eval=FALSE}
 # FILL THIS IN AND DELETE THIS COMMENT
@@ -190,19 +207,20 @@ library(pander)
 pander(beta_compare, caption = "Comparison of linear regression parameters estimated manually with those from R's lm().")
 ```
 
-Now do the same thing for standard errors of the parameter estimates.
+Now do the same thing for standard errors of the parameter estimates. The "true" covariance $\text{Var}(\hat{\mathbf{\beta}})$ uses the same formula as the estimated covariance $\widehat{\text{Var}}(\hat{\mathbf{\beta}})$ you calculated above, except substitute in $\sigma^2$ in place of $\hat{\sigma}^2$. You'll need to take the square root of the diagonal to go from covariance matrix to individual standard errors.
+
 ```{r compare_SEs, eval=FALSE}
 # FILL THIS IN AND DELETE THIS COMMENT
+true_covar <-
+true_SE <-
 SE_compare <- 
 pander(SE_compare, caption = "Comparison of standard errors of linear regression parameters estimated manually with those from R's lm().")
 ```
 
-Last, compare the values of the residual variance. The residual *standard deviation* in the `lm()` version can be found using the `summary()` list in an entry called `sigma`. You can convert this to residual variance by squaring it.
+Last, compare the "true" residual variance $\sigma^2$ with the values of the estimated residual variance obtained from the manual and `lm` methods. This will be a 1 row by 3 column matrix. The estimated residual *standard deviation* in the `lm` version can be found in the `summary()` list object in a list entry called `sigma`. You can convert this to residual variance by squaring it.
 
 ```{r compare_resid_var, eval=FALSE}
 # FILL THIS IN AND DELETE THIS COMMENT
 resid_var_compare <- 
 pander(resid_var_compare, caption = "Comparison of residual variances of manual linear regression with that from R's lm().")
 ```
-
-Congratulations, you've replicated R's linear regression function!
