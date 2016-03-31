@@ -1225,14 +1225,13 @@ length(cars$dist) # should be same as nrow(cars)
 ```
 
 
-We can edit cars
+Can treat data frames like a matrix though
 ===
 incremental: true
 
 
 ```r
-cars2 <- cars
-cars2[1, ]
+cars[1, ]
 ```
 
 ```
@@ -1241,15 +1240,39 @@ cars2[1, ]
 ```
 
 ```r
-cars2[1, ] <- c(999, 888)
-head(cars2, 3)
+cars[1:5, "speed", drop = FALSE]
 ```
 
 ```
-  speed dist
-1   999  888
-2     4   10
-3     7    4
+  speed
+1     4
+2     4
+3     7
+4     7
+5     8
+```
+
+
+Base R vs. dplyr
+===
+incremental: true
+
+Two ways of calculating the same thing: which do you like better?
+
+Classic R:
+
+```r
+mean(swiss[swiss$Agriculture > mean(swiss$Agriculture), "Fertility"])
+```
+
+`dplyr`:
+
+```r
+library(dplyr)
+swiss %>%
+    filter(Agriculture > mean(Agriculture)) %>%
+    select(Fertility) %>%
+    summarize(mean = mean(Fertility))
 ```
 
 Lab and homework
