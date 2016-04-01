@@ -9,10 +9,9 @@ height: 750
 Topics today
 ===
 
-- for loops
+- for() and while() loops
 - alternatives to for loops: dplyr::do, apply, lapply
-- while
-- conditionals
+- conditionals: if/else if/else
 - function writing
 
 Programming fundamentals
@@ -24,24 +23,41 @@ for() loops
 ===
 
 
+Example: cross-validation
+===
+
+
 while()
 ===
+
+
+apply
+===
+
+
+lapply
+===
+
+
+dplyr::do
+===
+
+broom
 
 
 conditionals
 ===
 
 
-Vectorizing
+Example: reading in data
 ===
 
+use an example of reading in a bunch of files and binding them together and doing different things depending on the file
 
-Function writing
-===
-type: section
+show rm to remove temporary files
 
 
 Homework
 ===
 
-Write a function to perform linear regression using matrix operations. Check its results against `lm`.
+Bootstrapping

@@ -1,0 +1,17 @@
+---
+title: "HW5: King County general election results, 2012"
+author: "YOUR NAME"
+date: "May 4, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Instructions
+
+> Questions for you to answer are as quoted blocks of text. Put your code used to address these questions and interpretation below each block.
+
+# Getting the data in
+
