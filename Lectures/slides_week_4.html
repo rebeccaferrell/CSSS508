@@ -1914,24 +1914,46 @@ names(speed_CI) &lt;- c(&quot;lower&quot;, &quot;upper&quot;)
 
 </section>
 <section data-transition="default" data-transition-speed="default">
-<h3>We can edit cars</h3>
+<h3>Can treat data frames like a matrix though</h3>
 <div class="slideContent" >
-<pre class="fragment"><code class="r">cars2 &lt;- cars
-cars2[1, ]
+<pre class="fragment"><code class="r">cars[1, ]
 </code></pre>
 
 <pre class="fragment"><code>  speed dist
 1     4    2
 </code></pre>
 
-<pre class="fragment"><code class="r">cars2[1, ] &lt;- c(999, 888)
-head(cars2, 3)
+<pre class="fragment"><code class="r">cars[1:5, &quot;speed&quot;, drop = FALSE]
 </code></pre>
 
-<pre class="fragment"><code>  speed dist
-1   999  888
-2     4   10
-3     7    4
+<pre class="fragment"><code>  speed
+1     4
+2     4
+3     7
+4     7
+5     8
+</code></pre>
+
+</div>
+
+</section>
+<section data-transition="default" data-transition-speed="default">
+<h3>Base R vs. dplyr</h3>
+<div class="slideContent" >
+<p>Two ways of calculating the same thing: which do you like better?</p>
+
+<p class="fragment">Classic R:</p>
+
+<pre class="fragment"><code class="r">mean(swiss[swiss$Agriculture &gt; mean(swiss$Agriculture), &quot;Fertility&quot;])
+</code></pre>
+
+<p class="fragment"><code>dplyr</code>:</p>
+
+<pre class="fragment"><code class="r">library(dplyr)
+swiss %&gt;%
+    filter(Agriculture &gt; mean(Agriculture)) %&gt;%
+    select(Fertility) %&gt;%
+    summarize(mean = mean(Fertility))
 </code></pre>
 
 </div>

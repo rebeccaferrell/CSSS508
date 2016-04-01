@@ -155,6 +155,7 @@ vignettes/billboard.csv
 
 Did everything go OK?
 ===
+incremental: true
 
 Look at the data types for the last few columns:
 
@@ -244,6 +245,7 @@ Exporting to a CSV drops R metadata, such as whether a variable is a character o
 
 dput
 ===
+incremental: true
 
 For asking for help, it is useful to prepare a snippet of your data with `dput`:
 
@@ -355,6 +357,7 @@ Why do we want tidy data?
 
 tidyr
 ===
+incremental: true
 
 The `tidyr` package provides functions to tidy up data, similar to `reshape` in Stata or `varstocases` in SPSS. Key functions:
 
@@ -366,6 +369,7 @@ The `tidyr` package provides functions to tidy up data, similar to `reshape` in 
 
 gather
 ===
+incremental: true
 
 Let's use `gather` to get the week and rank variables out of their current layout into two columns (big increase in rows, big drop in columns):
 
@@ -397,7 +401,7 @@ summary(billboard_2000$rank)
    1.00   26.00   51.00   51.05   76.00  100.00   18785 
 ```
 
-We don't want to keep the 18785 rows with missing ranks (i.e. observations for weeks since entering the Hot 100 that the song was no longer on the Hot 100).
+* We don't want to keep the 18785 rows with missing ranks (i.e. observations for weeks since entering the Hot 100 that the song was no longer on the Hot 100).
 
 
 gathering better: na.rm
@@ -421,6 +425,7 @@ summary(billboard_2000$rank)
 
 separate
 ===
+incremental: true
 
 The track length column isn't analytically friendly. Let's convert it to a number rather than the character (minutes:seconds) format:
 
@@ -440,6 +445,7 @@ summary(billboard_2000$length)
 
 extract_numeric
 ===
+incremental: true
 
 `tidyr` provides a convenience function to grab just the numeric information from a column that mixes text and numbers:
 
@@ -477,13 +483,31 @@ Example of data that we probably want to spread (unless we want to plot each sta
 A common cue to use `spread` is you have measurements of different quantities in the same column. 
 
 
-spread illustration
+spread illustration: before
 ===
+incremental: true
 
 
 ```r
-too_long_data <- data.frame(Group = c(rep("A", 3), rep("B", 3)), Statistic = rep(c("Mean", "Median", "SD"), 2), Value = c(1.28, 1.0, 0.72, 2.81, 2, 1.33))
+(too_long_data <- data.frame(Group = c(rep("A", 3), rep("B", 3)), Statistic = rep(c("Mean", "Median", "SD"), 2), Value = c(1.28, 1.0, 0.72, 2.81, 2, 1.33)))
+```
 
+```
+  Group Statistic Value
+1     A      Mean  1.28
+2     A    Median  1.00
+3     A        SD  0.72
+4     B      Mean  2.81
+5     B    Median  2.00
+6     B        SD  1.33
+```
+
+spread illustration: after
+===
+incremental: true
+
+
+```r
 (just_right_data <- too_long_data %>%
     spread(key = Statistic, value = Value))
 ```
@@ -493,7 +517,6 @@ too_long_data <- data.frame(Group = c(rep("A", 3), rep("B", 3)), Statistic = rep
 1     A 1.28      1 0.72
 2     B 2.81      2 1.33
 ```
-
 
 Charting the charts of 2000: data prep
 ===
@@ -539,13 +562,14 @@ billboard_trajectories <- ggplot(
 
 Charting the charts of 2000: beauty!
 ===
-<img src="slides_week_5-figure/unnamed-chunk-20-1.png" title="plot of chunk unnamed-chunk-20" alt="plot of chunk unnamed-chunk-20" width="1100px" height="500px" />
+<img src="slides_week_5-figure/unnamed-chunk-21-1.png" title="plot of chunk unnamed-chunk-21" alt="plot of chunk unnamed-chunk-21" width="1100px" height="500px" />
 
 Observation: there appears to be censoring around week 20 for songs falling out of the top 50 that I'd want to follow up on.
 
 
 Which songs were #1 the most weeks?
 ===
+incremental: true
 
 
 ```r
@@ -577,6 +601,7 @@ type: section
 
 Getting usable dates from Billboard
 ===
+incremental: true
 
 We have the date the songs first charted, but not the dates for later weeks. We can calculate these now that the data is tidy:
 
@@ -621,7 +646,7 @@ plot_by_day <- ggplot(billboard_2000,
 Calendar time plot!
 ===
 
-<img src="slides_week_5-figure/unnamed-chunk-24-1.png" title="plot of chunk unnamed-chunk-24" alt="plot of chunk unnamed-chunk-24" width="1100px" height="500px" />
+<img src="slides_week_5-figure/unnamed-chunk-25-1.png" title="plot of chunk unnamed-chunk-25" alt="plot of chunk unnamed-chunk-25" width="1100px" height="500px" />
 
 We see some of the entry dates are before 2000 --- presumably songs still charting during 2000 that came out earlier. 
 
@@ -673,6 +698,7 @@ str(spd$`Event Clearance Date`)
 
 Useful date/time functions
 ===
+incremental: true
 
 
 ```r
@@ -721,7 +747,7 @@ time_spd_plot <- ggplot(spd_times, aes(x = hour)) +
 Histogram of SPD event clearances, March 25
 ===
 
-<img src="slides_week_5-figure/unnamed-chunk-30-1.png" title="plot of chunk unnamed-chunk-30" alt="plot of chunk unnamed-chunk-30" width="1100px" height="600px" />
+<img src="slides_week_5-figure/unnamed-chunk-31-1.png" title="plot of chunk unnamed-chunk-31" alt="plot of chunk unnamed-chunk-31" width="1100px" height="600px" />
 
 
 Managing factor variables
@@ -793,7 +819,7 @@ time_spd_plot_2 <- ggplot(spd_times_2, aes(x = hour)) +
 SPD incident types: better ordered plot
 ===
 
-<img src="slides_week_5-figure/unnamed-chunk-33-1.png" title="plot of chunk unnamed-chunk-33" alt="plot of chunk unnamed-chunk-33" width="1100px" height="600px" />
+<img src="slides_week_5-figure/unnamed-chunk-34-1.png" title="plot of chunk unnamed-chunk-34" alt="plot of chunk unnamed-chunk-34" width="1100px" height="600px" />
 
 Other ways to reorder
 ===
@@ -828,7 +854,7 @@ jayz_bad_legend <- ggplot(jayz, aes(x = week, y = rank, group = track, color = t
 
 Jay-Z with bad legend order
 ===
-<img src="slides_week_5-figure/unnamed-chunk-35-1.png" title="plot of chunk unnamed-chunk-35" alt="plot of chunk unnamed-chunk-35" width="1100px" height="600px" />
+<img src="slides_week_5-figure/unnamed-chunk-36-1.png" title="plot of chunk unnamed-chunk-36" alt="plot of chunk unnamed-chunk-36" width="1100px" height="600px" />
 
 
 Better ordering for Jay-Z
@@ -848,13 +874,14 @@ jayz_good_legend <- ggplot(jayz, aes(x = week, y = rank, group = track, color = 
 
 Jay-Z with good legend order
 ===
-<img src="slides_week_5-figure/unnamed-chunk-37-1.png" title="plot of chunk unnamed-chunk-37" alt="plot of chunk unnamed-chunk-37" width="1100px" height="600px" />
+<img src="slides_week_5-figure/unnamed-chunk-38-1.png" title="plot of chunk unnamed-chunk-38" alt="plot of chunk unnamed-chunk-38" width="1100px" height="600px" />
 
 
 Dropping unused levels
 ===
+incremental: true
 
-After subsetting you can end up with fewer realized levels than before, but old levels remain linked and can cause problems for regressions. Drop unused levels from variables or your whole data using `droplevels`.
+After subsetting you can end up with fewer *realized* levels than before, but old levels remain linked and can cause problems for regressions. Drop unused levels from variables or your whole data using `droplevels`.
 
 
 ```r
@@ -883,14 +910,6 @@ Homework: be a data janitor!
 ===
 type: section
 
+Vote tallies in King County from the 2012 general election are in a 60 MB tab-delimited text file downloaded from the [WA Secretary of State](https://wei.sos.wa.gov/agency/osos/en/press_and_research/PreviousElections/2012/General-Election/Data/Documents/Forms/AllItems.aspx?RootFolder=%2Fagency%2Fosos%2Fen%2Fpress_and_research%2FPreviousElections%2F2012%2FGeneral-Election%2FData%2FDocuments%2FPrecinct_Results&FolderCTID=0x0120008B9C603856A5C84E89934BDF6A72C2ED&View={DF1C73C5-333F-4F68-8713-AD3007138C66}).
 
-Homework
-===
-
-You will be working with vote tallies in King County from the 2012 general election. The data are in a 60 MB tab-delimited text file downloaded from the [Washington Secretary of State](https://wei.sos.wa.gov/agency/osos/en/press_and_research/PreviousElections/2012/General-Election/Data/Documents/Forms/AllItems.aspx?RootFolder=%2Fagency%2Fosos%2Fen%2Fpress_and_research%2FPreviousElections%2F2012%2FGeneral-Election%2FData%2FDocuments%2FPrecinct_Results&FolderCTID=0x0120008B9C603856A5C84E89934BDF6A72C2ED&View={DF1C73C5-333F-4F68-8713-AD3007138C66}) and completely unmodified. Your job is to document the process of wrangling this data so that you can make the following plots:
-
-* **Relationship between precinct size and turnout.** Precinct-level scatterplot. On the horizontal axis: count of registered voters. On the vertical axis: voter turnout percentages for the presidential race (total votes for a candidate or write-in, divided by registered voters for each precinct). 
-
-* **Relationship between Democratic support for state and federal executive positions.** Precinct-level scatterplot. On the horizontal axis: percentage of voters supporting Obama in the presidential race. On the vertical axis: percentage of voters supporting Inslee in the gubernatorial race.
-
-Make it look good, and don't include data you shouldn't!
+The data have no documentation, so show your detective work to answer questions about the data and clean it up in an R Markdown template on the course website.

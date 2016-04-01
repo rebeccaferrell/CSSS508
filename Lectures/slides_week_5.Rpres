@@ -146,6 +146,7 @@ vignettes/billboard.csv
 
 Did everything go OK?
 ===
+incremental: true
 
 Look at the data types for the last few columns:
 
@@ -211,6 +212,7 @@ Exporting to a CSV drops R metadata, such as whether a variable is a character o
 
 dput
 ===
+incremental: true
 
 For asking for help, it is useful to prepare a snippet of your data with `dput`:
 
@@ -313,6 +315,7 @@ Why do we want tidy data?
 
 tidyr
 ===
+incremental: true
 
 The `tidyr` package provides functions to tidy up data, similar to `reshape` in Stata or `varstocases` in SPSS. Key functions:
 
@@ -324,6 +327,7 @@ The `tidyr` package provides functions to tidy up data, similar to `reshape` in 
 
 gather
 ===
+incremental: true
 
 Let's use `gather` to get the week and rank variables out of their current layout into two columns (big increase in rows, big drop in columns):
 ```{r}
@@ -344,7 +348,7 @@ incremental: true
 summary(billboard_2000$rank)
 ```
 
-We don't want to keep the `r sum(is.na(billboard_2000$rank))` rows with missing ranks (i.e. observations for weeks since entering the Hot 100 that the song was no longer on the Hot 100).
+* We don't want to keep the `r sum(is.na(billboard_2000$rank))` rows with missing ranks (i.e. observations for weeks since entering the Hot 100 that the song was no longer on the Hot 100).
 
 
 gathering better: na.rm
@@ -362,6 +366,7 @@ summary(billboard_2000$rank)
 
 separate
 ===
+incremental: true
 
 The track length column isn't analytically friendly. Let's convert it to a number rather than the character (minutes:seconds) format:
 ```{r}
@@ -375,6 +380,7 @@ summary(billboard_2000$length)
 
 extract_numeric
 ===
+incremental: true
 
 `tidyr` provides a convenience function to grab just the numeric information from a column that mixes text and numbers:
 
@@ -406,16 +412,22 @@ Example of data that we probably want to spread (unless we want to plot each sta
 A common cue to use `spread` is you have measurements of different quantities in the same column. 
 
 
-spread illustration
+spread illustration: before
 ===
+incremental: true
 
 ```{r}
-too_long_data <- data.frame(Group = c(rep("A", 3), rep("B", 3)), Statistic = rep(c("Mean", "Median", "SD"), 2), Value = c(1.28, 1.0, 0.72, 2.81, 2, 1.33))
+(too_long_data <- data.frame(Group = c(rep("A", 3), rep("B", 3)), Statistic = rep(c("Mean", "Median", "SD"), 2), Value = c(1.28, 1.0, 0.72, 2.81, 2, 1.33)))
+```
 
+spread illustration: after
+===
+incremental: true
+
+```{r}
 (just_right_data <- too_long_data %>%
     spread(key = Statistic, value = Value))
 ```
-
 
 Charting the charts of 2000: data prep
 ===
@@ -468,6 +480,7 @@ Observation: there appears to be censoring around week 20 for songs falling out 
 
 Which songs were #1 the most weeks?
 ===
+incremental: true
 
 ```{r}
 billboard_2000 %>%
@@ -484,6 +497,7 @@ type: section
 
 Getting usable dates from Billboard
 ===
+incremental: true
 
 We have the date the songs first charted, but not the dates for later weeks. We can calculate these now that the data is tidy:
 
@@ -558,6 +572,7 @@ str(spd$`Event Clearance Date`)
 
 Useful date/time functions
 ===
+incremental: true
 
 ```{r}
 demo_dts <- spd$`Event Clearance Date`[1:2]
@@ -704,8 +719,9 @@ jayz_good_legend
 
 Dropping unused levels
 ===
+incremental: true
 
-After subsetting you can end up with fewer realized levels than before, but old levels remain linked and can cause problems for regressions. Drop unused levels from variables or your whole data using `droplevels`.
+After subsetting you can end up with fewer *realized* levels than before, but old levels remain linked and can cause problems for regressions. Drop unused levels from variables or your whole data using `droplevels`.
 
 ```{r}
 jayz_biggest <- jayz %>% filter(track %in% c("I Just Wanna Love U ...", "Big Pimpin'"))
@@ -720,14 +736,6 @@ Homework: be a data janitor!
 ===
 type: section
 
+Vote tallies in King County from the 2012 general election are in a 60 MB tab-delimited text file downloaded from the [WA Secretary of State](https://wei.sos.wa.gov/agency/osos/en/press_and_research/PreviousElections/2012/General-Election/Data/Documents/Forms/AllItems.aspx?RootFolder=%2Fagency%2Fosos%2Fen%2Fpress_and_research%2FPreviousElections%2F2012%2FGeneral-Election%2FData%2FDocuments%2FPrecinct_Results&FolderCTID=0x0120008B9C603856A5C84E89934BDF6A72C2ED&View={DF1C73C5-333F-4F68-8713-AD3007138C66}).
 
-Homework
-===
-
-You will be working with vote tallies in King County from the 2012 general election. The data are in a 60 MB tab-delimited text file downloaded from the [Washington Secretary of State](https://wei.sos.wa.gov/agency/osos/en/press_and_research/PreviousElections/2012/General-Election/Data/Documents/Forms/AllItems.aspx?RootFolder=%2Fagency%2Fosos%2Fen%2Fpress_and_research%2FPreviousElections%2F2012%2FGeneral-Election%2FData%2FDocuments%2FPrecinct_Results&FolderCTID=0x0120008B9C603856A5C84E89934BDF6A72C2ED&View={DF1C73C5-333F-4F68-8713-AD3007138C66}) and completely unmodified. Your job is to document the process of wrangling this data so that you can make the following plots:
-
-* **Relationship between precinct size and turnout.** Precinct-level scatterplot. On the horizontal axis: count of registered voters. On the vertical axis: voter turnout percentages for the presidential race (total votes for a candidate or write-in, divided by registered voters for each precinct). 
-
-* **Relationship between Democratic support for state and federal executive positions.** Precinct-level scatterplot. On the horizontal axis: percentage of voters supporting Obama in the presidential race. On the vertical axis: percentage of voters supporting Inslee in the gubernatorial race.
-
-Make it look good, and don't include data you shouldn't!
+The data have no documentation, so show your detective work to answer questions about the data and clean it up in an R Markdown template on the course website.
