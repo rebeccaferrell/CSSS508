@@ -36,11 +36,18 @@ incremental: true
 
 `for` loops are the most basic and general kind of loop. You give it a vector of indices, it assigns to first value to some variable, does stuff, increments the variable to the next value, and keeps going doing more stuff until it runs out of indices.
 
-```{r}
+
+```r
 for(i in 1:3) {
     # inside for, output won't show up w/o "print"
     print(i^2) 
 }
+```
+
+```
+[1] 1
+[1] 4
+[1] 9
 ```
 
 Iterating over indices `1:n` is very common. `n` might be number of rows/columns in matrix or data frame, or length of vector calculated using `nrow`, `ncol`, `length`.
@@ -51,12 +58,27 @@ Iterate over character vectors
 incremental: true
 
 You can also iterate over a character vector:
-```{r}
+
+```r
 some_letters <- letters[4:7]
 for(i in some_letters) {
     print(i)
 }
+```
+
+```
+[1] "d"
+[1] "e"
+[1] "f"
+[1] "g"
+```
+
+```r
 i # the index variable was added to environment
+```
+
+```
+[1] "g"
 ```
 
 
@@ -66,11 +88,26 @@ incremental: true
 
 When you want to iterate over something that isn't numeric but want to keep numeric track of where you are in the loop, `seq_along` is useful:
 
-```{r}
+
+```r
 for(a in seq_along(some_letters)) {
     print(paste0("Letter ", a, ": ", some_letters[a]))
 }
+```
+
+```
+[1] "Letter 1: d"
+[1] "Letter 2: e"
+[1] "Letter 3: f"
+[1] "Letter 4: g"
+```
+
+```r
 a
+```
+
+```
+[1] 4
 ```
 
 
@@ -80,7 +117,8 @@ incremental: true
 
 Usually in a `for` loop, you aren't printing output, but want to store results from each iteration somewhere. Figure out how you want to store the output (vector, matrix, data frame, list, etc.) and then **pre-allocate** an object for that (typically with missing values as placeholders).
 
-```{r}
+
+```r
 # preallocate vector of NAs
 iters <- 5
 output <- rep(NA, iters)
@@ -91,12 +129,17 @@ for(i in 1:iters) {
 output
 ```
 
+```
+[1]  1  1  5 13 25
+```
+
 
 Preallocated list: regression models
 ===
 incremental: true
 
-```{r}
+
+```r
 x <- rnorm(30) # making fake data
 fake_data <- data.frame(x = x, y = 2 * x + rnorm(30))
 # model formulas as strings in named vector
@@ -111,6 +154,116 @@ for(mod in names(models)) {
 str(output)
 ```
 
+```
+List of 2
+ $ int only:List of 11
+  ..$ coefficients : Named num 0.0894
+  .. ..- attr(*, "names")= chr "(Intercept)"
+  ..$ residuals    : Named num [1:30] -0.0138 -2.9795 1.3557 0.3311 3.2907 ...
+  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
+  ..$ effects      : Named num [1:30] -0.49 -2.977 1.358 0.333 3.293 ...
+  .. ..- attr(*, "names")= chr [1:30] "(Intercept)" "" "" "" ...
+  ..$ rank         : int 1
+  ..$ fitted.values: Named num [1:30] 0.0894 0.0894 0.0894 0.0894 0.0894 ...
+  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
+  ..$ assign       : int 0
+  ..$ qr           :List of 5
+  .. ..$ qr   : num [1:30, 1] -5.477 0.183 0.183 0.183 0.183 ...
+  .. .. ..- attr(*, "dimnames")=List of 2
+  .. .. .. ..$ : chr [1:30] "1" "2" "3" "4" ...
+  .. .. .. ..$ : chr "(Intercept)"
+  .. .. ..- attr(*, "assign")= int 0
+  .. ..$ qraux: num 1.18
+  .. ..$ pivot: int 1
+  .. ..$ tol  : num 1e-07
+  .. ..$ rank : int 1
+  .. ..- attr(*, "class")= chr "qr"
+  ..$ df.residual  : int 29
+  ..$ call         : language lm(formula = formula(models[mod]), data = fake_data)
+  ..$ terms        :Classes 'terms', 'formula' length 3 y ~ 1
+  .. .. ..- attr(*, "variables")= language list(y)
+  .. .. ..- attr(*, "factors")= int(0) 
+  .. .. ..- attr(*, "term.labels")= chr(0) 
+  .. .. ..- attr(*, "order")= int(0) 
+  .. .. ..- attr(*, "intercept")= int 1
+  .. .. ..- attr(*, "response")= int 1
+  .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+  .. .. ..- attr(*, "predvars")= language list(y)
+  .. .. ..- attr(*, "dataClasses")= Named chr "numeric"
+  .. .. .. ..- attr(*, "names")= chr "y"
+  ..$ model        :'data.frame':	30 obs. of  1 variable:
+  .. ..$ y: num [1:30] 0.0756 -2.8901 1.4451 0.4205 3.3801 ...
+  .. ..- attr(*, "terms")=Classes 'terms', 'formula' length 3 y ~ 1
+  .. .. .. ..- attr(*, "variables")= language list(y)
+  .. .. .. ..- attr(*, "factors")= int(0) 
+  .. .. .. ..- attr(*, "term.labels")= chr(0) 
+  .. .. .. ..- attr(*, "order")= int(0) 
+  .. .. .. ..- attr(*, "intercept")= int 1
+  .. .. .. ..- attr(*, "response")= int 1
+  .. .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+  .. .. .. ..- attr(*, "predvars")= language list(y)
+  .. .. .. ..- attr(*, "dataClasses")= Named chr "numeric"
+  .. .. .. .. ..- attr(*, "names")= chr "y"
+  ..- attr(*, "class")= chr "lm"
+ $ std     :List of 12
+  ..$ coefficients : Named num [1:2] -0.0167 2.0082
+  .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "x"
+  ..$ residuals    : Named num [1:30] -0.812 -1.902 0.311 0.711 -0.547 ...
+  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
+  ..$ effects      : Named num [1:30] -0.49 10.785 0.299 0.911 -0.973 ...
+  .. ..- attr(*, "names")= chr [1:30] "(Intercept)" "x" "" "" ...
+  ..$ rank         : int 2
+  ..$ fitted.values: Named num [1:30] 0.887 -0.988 1.135 -0.29 3.928 ...
+  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
+  ..$ assign       : int [1:2] 0 1
+  ..$ qr           :List of 5
+  .. ..$ qr   : num [1:30, 1:2] -5.477 0.183 0.183 0.183 0.183 ...
+  .. .. ..- attr(*, "dimnames")=List of 2
+  .. .. .. ..$ : chr [1:30] "1" "2" "3" "4" ...
+  .. .. .. ..$ : chr [1:2] "(Intercept)" "x"
+  .. .. ..- attr(*, "assign")= int [1:2] 0 1
+  .. ..$ qraux: num [1:2] 1.18 1.11
+  .. ..$ pivot: int [1:2] 1 2
+  .. ..$ tol  : num 1e-07
+  .. ..$ rank : int 2
+  .. ..- attr(*, "class")= chr "qr"
+  ..$ df.residual  : int 28
+  ..$ xlevels      : Named list()
+  ..$ call         : language lm(formula = formula(models[mod]), data = fake_data)
+  ..$ terms        :Classes 'terms', 'formula' length 3 y ~ x
+  .. .. ..- attr(*, "variables")= language list(y, x)
+  .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+  .. .. .. ..- attr(*, "dimnames")=List of 2
+  .. .. .. .. ..$ : chr [1:2] "y" "x"
+  .. .. .. .. ..$ : chr "x"
+  .. .. ..- attr(*, "term.labels")= chr "x"
+  .. .. ..- attr(*, "order")= int 1
+  .. .. ..- attr(*, "intercept")= int 1
+  .. .. ..- attr(*, "response")= int 1
+  .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+  .. .. ..- attr(*, "predvars")= language list(y, x)
+  .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+  .. .. .. ..- attr(*, "names")= chr [1:2] "y" "x"
+  ..$ model        :'data.frame':	30 obs. of  2 variables:
+  .. ..$ y: num [1:30] 0.0756 -2.8901 1.4451 0.4205 3.3801 ...
+  .. ..$ x: num [1:30] 0.45 -0.484 0.573 -0.136 1.964 ...
+  .. ..- attr(*, "terms")=Classes 'terms', 'formula' length 3 y ~ x
+  .. .. .. ..- attr(*, "variables")= language list(y, x)
+  .. .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+  .. .. .. .. ..- attr(*, "dimnames")=List of 2
+  .. .. .. .. .. ..$ : chr [1:2] "y" "x"
+  .. .. .. .. .. ..$ : chr "x"
+  .. .. .. ..- attr(*, "term.labels")= chr "x"
+  .. .. .. ..- attr(*, "order")= int 1
+  .. .. .. ..- attr(*, "intercept")= int 1
+  .. .. .. ..- attr(*, "response")= int 1
+  .. .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+  .. .. .. ..- attr(*, "predvars")= language list(y, x)
+  .. .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+  .. .. .. .. ..- attr(*, "names")= chr [1:2] "y" "x"
+  ..- attr(*, "class")= chr "lm"
+```
+
 
 Conditional flow
 ===
@@ -122,7 +275,8 @@ type: incremental
 
 You've seen the `ifelse()` function before, which did logical checks on a whole vector. For checking whether a single condition holds and doing more complex actions, you can use `if()` and `else`:
 
-```{r, eval=FALSE}
+
+```r
 for(i in 1:10) {
     if(i %% 2 == 0) {
         print(paste0("The number ", i, " is even"))
@@ -140,23 +294,26 @@ if, else: simple example
 ===
 incremental: true
 
-```{r, echo=FALSE}
-for(i in 1:10) {
-    if(i %% 2 == 0) {
-        print(paste0("The number ", i, " is even"))
-    } else if(i %% 3 == 0) {
-        print(paste0("The number ", i, " is not even but divisible by 3"))
-    } else {
-        print(paste0("The number ", i, " is not divisible by 2 or 3"))
-    }
-}
+
+```
+[1] "The number 1 is not divisible by 2 or 3"
+[1] "The number 2 is even"
+[1] "The number 3 is not even but divisible by 3"
+[1] "The number 4 is even"
+[1] "The number 5 is not divisible by 2 or 3"
+[1] "The number 6 is even"
+[1] "The number 7 is not divisible by 2 or 3"
+[1] "The number 8 is even"
+[1] "The number 9 is not even but divisible by 3"
+[1] "The number 10 is even"
 ```
 
 
 Example: downloading multiple files
 ===
 
-```{r, eval=FALSE}
+
+```r
 download.file("...",temp, mode="wb")
 unzip(temp, "gbr_Country_en_csv_v2.csv")
 dd <- read.table("gbr_Country_en_csv_v2.csv", sep=",",skip=2, header=T)
@@ -183,7 +340,8 @@ incremental: true
 
 Another looping structure (less common) is the `while` loop. Rather than iterating over a predefined vector, the loop keeps going until some condition is no longer true.
 
-```{r}
+
+```r
 num_heads <- 0; num_flips <- 0
 while(num_heads < 4) {
     coin_flip <- rbinom(n = 1, size = 1, prob = 0.5)
@@ -191,7 +349,18 @@ while(num_heads < 4) {
     num_flips <- num_flips + 1
 }
 num_heads
+```
+
+```
+[1] 4
+```
+
+```r
 num_flips # follows negative binomial distribution
+```
+
+```
+[1] 6
 ```
 
 
