@@ -1,0 +1,50 @@
+CSSS 508, Week 7
+===
+author: Rebecca Ferrell
+date: May 11, 2016
+transition: rotate
+width: 1100
+height: 750
+
+
+lapply
+===
+type: section
+
+
+Writing simple functions
+===
+type: section
+
+
+replicate
+===
+
+Use `replicate` with repeated random number simulations
+
+example: illustrate central limit theorem
+
+
+apply
+===
+
+apply is trash but old-school R programmers use it and functional programming people like it, so you'll see it and you need to know what it is, but it's not faster than a for loop and debatably clearer
+
+function writing for apply
+===
+
+
+
+
+Homework
+===
+
+Bootstrapping simulation:
+
+- First, randomly generate data, then fit a model, and then do this repeatedly. The standard error is the standard deviation in the estimate of the quantity. This gives us the "truth" for what the standard error is.
+
+- Next, we bootstrap. Randomly generate one set of data. You'll do the sample thing as above, but now you can't generate more new data, so you'll instead sample from it with replacement, then fit the model repeatedly.
+
+- Use ggplot's qqplot to compare the true sampling distribution of the estimator with the bootstrapped estimate.
+
+HW week 7: take HW 6 and now make it functional (do_one()), using replicate.
