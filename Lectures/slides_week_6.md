@@ -637,7 +637,11 @@ incremental: true
 ```
 
 
-Non-artificial example: importing many files
+Difficult real-world example
+===
+type: section
+
+Importing many files
 ===
 
 Let us journey into...**data hell!**
@@ -654,15 +658,15 @@ incremental: true
 - Pre-allocate a list for the individual files
 - Inside a `for` loop `seq_along`ing the file names:
     + Make a URL and download file 
-    + Read the file in with Excel-reading package
-    + Clean up a bit and store in appropriate list slot
+    + Read the file in with Excel-reading package and store in list
 - Use `dplyr::bind_rows` to combine all tables into one
 - Remove the list to save memory
+- Clean up the combined data
 - Some variations on general process you might encounter:
     + Unzip files first (`unzip`)
     + Use `if` logic to clean up data differently depending on file
 
-See the (demonstration on the course page)[https://rebeccaferrell.github.io/Lectures/data_download_demo.html] for details.
+**HOMEWORK**: read the [demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html).
 
 
 while loops
@@ -721,7 +725,7 @@ for(position in 1:length(my_vector)) {
 
 ```
    user  system elapsed 
-  0.213   0.012   0.238 
+  0.217   0.011   0.253 
 ```
 
 
@@ -738,7 +742,7 @@ new_vector <- my_vector + 1
 
 ```
    user  system elapsed 
-  0.004   0.001   0.004 
+  0.004   0.001   0.005 
 ```
 
 ```r
@@ -747,7 +751,7 @@ for_time / vec_time
 
 ```
    user  system elapsed 
-  53.25   12.00   59.50 
+  54.25   11.00   50.60 
 ```
 
 Vector/matrix arithmetic is implemented using fast, optimized functions that a `for` loop can't compete with.
@@ -805,7 +809,7 @@ pmax(c(0, 2, 4), c(1, 1, 1), c(2, 2, 2))
 ```
 
 
-Homework: cross-validation
+Lab exercise
 ===
 type: section
 
@@ -814,4 +818,8 @@ take some data, partition into folds, fit model, save predictions for left-out d
 
 for more info: [Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/), Chapter 5.
 
-Additional homework: read the file downloading demonstration.
+Homework
+===
+type: section
+
+Read the [data downloading demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html). I hope that your forays into automated data downloading and cleaning are smoother than this one!
