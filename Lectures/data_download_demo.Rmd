@@ -1,0 +1,515 @@
+---
+title: "Downloading data: a dark and depressing journey"
+author: "Rebecca Ferrell"
+output:
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction to data hell
+
+![Pieter Bruegel's Mad Meg takes on data hell](https://upload.wikimedia.org/wikipedia/commons/f/f6/Mad_meg.jpg)
+
+Our goal is to download, import, and clean up the files posted at [California Office of Statewide Health Planning and Development Hospital Quarterly Financial and Utilization Data Files](http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/CmpleteData/default.asp) from 2000-2015. The end result should be a data frame with one row per hospital per year and over 100 columns of information. The data of interest are provided in files grouped annually for 2000-2015. Someone studying state and federal expenditures on hospitals would be interested in these data.
+
+This seems straightforward enough, but turns out to be *quite* a challenge due to many surprise inconsistencies in how this agency prepared the Excel files. It took me about 10 hours to figure everything out and write this up, and I didn't even do any analysis! This is more complex than typical data issues I encounter, but it's a real-world example of manageable size, and worth studying to see how you can solve issues as they pop up.
+
+Some lessons from this:
+
+* Excel is great for entering in data by-hand, but a very poor format for transmitting data. Much of my time in this process was spent dealing with Excel-specific issues that would not have arisen if the files had been provided as CSVs in the first place.
+
+* When trying to do things in bulk, one-off problems are your enemy, and you will spend far more of your time dealing with the exceptions to the rule. In this case, we have a conspiracy of human-introduced inconsistencies in file names, column names, column formatting, manually "blanked" cells in Excel, and undocumented extra columns.
+
+* The R functions and packages we use help a lot in avoiding manual typing out of things, but the `readxl` package is still in relatively early development. It shows some limitations here in handling certain aspects of these spreadsheets that drive me to seek less-than-elegant solutions.
+
+In this case, I *could* have done this all more quickly by: downloading each of the files individually, opening them up one-by-one in Excel, creating a "master" Excel file, manually pasting in the data from each one of the files into the master file, fixing up column type issues within Excel, exporting this to a CSV, and importing the CSV into R. However, this is an unappealing solution:
+
+* It does not provide documentation of my process. You'd have to take my word for what I said I did. Maybe I am a liar, very sloppy, or not forthcoming about my process.
+
+* It provides many opportunities for additional human error (like the Reinhart and Rogoff failure to drag the formula all the way down). For example, maybe I thought I copied data for 2009, and tried to paste it at the bottom of the master spreadsheet. However, I hit a wrong key and the copying didn't work, and instead I end up pasting 2008's data twice without noticing.
+
+* I would need to be clever about running manual checks on the data to detect issues like the above. 
+
+* If I do make a mistake and find it at the end, I may have to re-do *everything* about this process to fix it. With R code, you just need to change some lines.
+
+![Goofus and Gallant sharing data](images/goofus_gallant_data.jpg)
+
+# Strategy
+
+Let's examine all the URLs to identify patterns and figure out a good way to loop.
+
+* 2015: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2015/2015_R4_Q4.xls>
+* 2014: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2014/2014_R4_Q4.xls>
+* 2013: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2013/2013_Q4R4.xls>
+* 2012: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2012/2012R4_Q4.xls>
+* 2011: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2011/2011R4_Q4.xls>
+* 2010: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2010/2010_Q4R4_Rev2.xls>
+* 2009: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2009/2009_Q4R4.xls>
+* 2008: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2008/2008Q4R4_Revised.xls>
+* 2007: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2007/2007_Q4R4.xls>
+* 2006: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2006/2006_Q4R4.xls>
+* 2005: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2005/2005_R4Q4_Rev5-07.xls>
+* 2004: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2004/2004_R4Q4_Rev5-07.xls>
+* 2003: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2003/2003_R4QR_Rev5-07.xls>
+* 2002: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2002/2002_R4Q4_Rev5-07.xls>
+* 2001: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2001/2001_R4Q4_Rev5-07_1.xls>
+* 2000: <http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr2000/2000_R4Q4_Rev5-07.xls>
+
+What I observe:
+
+* All files are inside a web directory of the form `http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr[YEAR]` where we replace `[YEAR]` with the appropriate year.
+* All files have extension `.xls`.
+* Files for 2000, 2002, 2004, and 2005 are named in pattern `[YEAR]_R4Q4_Rev5-07`
+* File for 2001 is named `2001_R4Q4_Rev5-07_1`.
+* File for 2003 has a typo in the name: `2003_R4QR_Rev5-07`. Oops!
+* Files for 2006, 2007, 2009, and 2013 are named in pattern `[YEAR]_Q4R4`.
+* File for 2008 named `2008Q4R4_Revised`.
+* File for 2010 named `2010_Q4R4_Rev2`.
+* File for 2011 and 2012 named `[YEAR]R4_Q4`. 
+* File for 2014 and 2015 named `[YEAR]_R4_Q4`.
+* Place your bets on the file name for 2016!
+
+What would make sense here is to use a bit of looping to generate these URLs without a ton of copying and pasting. Then when I download these spreadsheets, I'll rename the files something better and consistent for posterity: `CA_OSHPD_utilization_[YEAR].xls`, inside a folder I've made called `Downloaded_data`. I'll then pre-allocate a list object to store each of the files when I read them into R, and then I can use `bind_rows` in `dplyr` to combine them into one big data frame. Then, I can remove the list to free up memory and save it in R format for later use.
+
+# URL pattern generation
+
+Let's make a vector of the new file names to use. I will use the `paste0` function, which takes character strings (or numbers to convert to characters) and then concatenates them with no separator. `paste0` uses R's recycling, so giving it [character vector of length 1] + [vector of years] + [character vector of length 1] will give us a vector as long as the number of years.
+
+```{r load_libraries, message=FALSE, warning=FALSE}
+library(readxl)
+library(dplyr)
+library(lubridate)
+```
+
+```{r make_filenames}
+years <- 2000:2015
+extension <- ".xls"
+# On Rebecca's computer: working directory is Lectures folder.
+# This path goes one level up from there (the ..) and then into 
+# a folder called Downloaded_data. You will need to create or modify
+# these directories based on where you are doing things!!
+(new_filenames <- paste0("../Downloaded_data/CA_OSHPD_utilization_", years, extension))
+```
+
+Looks good so far. Now let's make a vector of the URLs to download from. We'll try to avoid manual repetition by making a variable that stores the common part of the URL, and a variable that captures the stuff that does change, and `paste0`ing it all together:
+
+```{r make_URLs}
+base_url <- "http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/Qtr"
+urls <- character(length(years))
+names(urls) <- years
+for(yr in years) {
+    if(yr %in% c(2000, 2002, 2004:2005)) {
+        nm <- "_R4Q4_Rev5-07"
+    } else if(yr == 2001) {
+        nm <- "_R4Q4_Rev5-07_1"
+    } else if(yr == 2003) {
+        nm <- "_R4QR_Rev5-07"
+    } else if(yr %in% c(2006:2007, 2009, 2013)) {
+        nm <- "_Q4R4"
+    } else if(yr == 2008) {
+        nm <- "Q4R4_Revised"
+    } else if(yr == 2010) {
+        nm <- "_Q4R4_Rev2"
+    } else if(yr %in% 2011:2012) {
+        nm <- "R4_Q4"
+    } else if(yr %in% 2014:2015) {
+        nm <- "_R4_Q4"
+    }
+    urls[as.character(yr)] <- paste0(base_url, yr, "/", yr, nm, extension)
+}
+urls
+```
+
+Looks good!
+
+# Downloading
+
+Now let's download these files using a loop, printing a warning if one of the years didn't work:
+```{r download, cache=TRUE, error=TRUE}
+for(i in seq_along(urls)) {
+    # download the Excel files:
+    # mode "wb" means to write a binary file (like Excel or zip)
+    # for plain text like a csv, use "w" instead
+    file_check <- download.file(url = urls[i],
+                                destfile = new_filenames[i],
+                                mode = "wb")
+    # value returned from download.file is 0 if everything worked
+    if(file_check != 0) {
+        print(paste0(years[i], " did not work, uh oh!"))
+    }
+}
+```
+
+Thanks to a careful eye for detail in the URLs, this worked! If it hadn't, it would have drawn my attention to a bad URL that I can go back and fix.
+
+# Reading in the data
+
+
+## A first attempt
+
+Now I have files saved locally. Next, I want to import these Excel files into R:
+```{r read_in_data, cache=TRUE, error=TRUE}
+# pre-allocate a list for the data for each year
+yearly_frames <- vector("list", length(urls))
+
+for(i in seq_along(new_filenames)) {
+    # extra check that file exists
+    if(file.exists(new_filenames[i])) {
+        yearly_frames[[i]] <- read_excel(new_filenames[i])
+    }
+}
+```
+
+Hmm. The `DEFINEDNAME:` messages are not errors per se, but appears to convey the `readxl` package's confusion over some cells in the Excel spreadsheet apparently having cell names. These cell names are meta-information that will not make it into our data, which is fine in this case. This is a known issue with this package (see [here](https://github.com/hadley/readxl/issues/82)).
+
+## Fixing column types
+
+The bigger issue is the warning about column type issues -- in particular, a phone number (column 13) that was treated as numeric but should not have been because of formatting. So, I'll want to re-do this loop, but adding in extra arguments to `read_excel` to be consistent about the column types since `read_excel` may be guessing wrong when the values are inconsistently formatted or should really be characters (e.g. with ID numbers).
+
+This means going to the [data documention PDF](http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/QFUR2000AfterDoc.pdf) and looking at the columns to figure out what should be character and what should be numeric. The first two columns are identifiers (number and name), and should be character. Columns 4 and 5 are dates. Columns 6-17 should be character. The rest of the 121 columns appear to be numeric quantities. The documentation for `read_excel` indicates we can pass a character vector to the `col_types` argument containing `"blank"`, `"numeric"`, `"date"` or `"text"` as its entries.
+
+```{r set_column_types}
+OSHPD_col_types <- c("text", "text", "numeric", "date", "date",
+                     rep("text", 17 - 6 + 1),
+                     rep("numeric", 121 - 17))
+```
+
+Let's try reading in the files again (note: I would probably just modify the loop above to include this change, but I wanted to be transparent about the error and how I was iteratively fixing it). This time, anticipating some further issues, I'll make the loop print messages if there are problems:
+
+```{r read_in_data_2, cache=TRUE, error=TRUE}
+for(i in seq_along(new_filenames)) {
+    # extra check that file exists
+    if(file.exists(new_filenames[i])) {
+        print(paste0("Now trying ", years[i]))
+        yearly_frames[[i]] <- read_excel(new_filenames[i],
+                                         col_types = OSHPD_col_types)
+    }
+}
+```
+
+## 2013: a year of data hell
+
+Huh. This error message seems to suggest that the `r years[i]` file has an unexpected number of columns or some other reason for getting a mismatch between number of column types and the column names, and that's breaking things. So let's look at this year on its own (note that current value of `i` is where the loop broke):
+
+```{r check_out_2013, cache=TRUE, error=TRUE}
+plain_2013 <- read_excel(new_filenames[i])
+ncol(plain_2013) == length(OSHPD_col_types)
+```
+
+Well, it's not the *number* of columns. What about their names? I'll look at how long it is, and how they compare to a file that worked (e.g. the first one):
+```{r check_out_2013_more, cache=TRUE, error=TRUE}
+length(colnames(plain_2013)) == length(OSHPD_col_types)
+all.equal(colnames(plain_2013), colnames(yearly_frames[[1]]))
+```
+
+### A side journey into column names
+
+Doesn't look like anything is wrong there length-wise, though the names don't match those from the first file we read in (data for `r years[1]`) -- why?
+
+```{r name_check}
+head(colnames(plain_2013), 10)
+head(colnames(yearly_frames[[1]]), 10)
+```
+
+It looks like the first year of data had underscores in the names, while this weird 2013 file had spaces instead. That *shouldn't* be related to the problems I'm having since I'm not combining things yet, but does mean I should manually specify the column names as well as types when reading the data in to get consistency across years. (Inconsistency in column names would be a big problem when we try to combine everything!)
+
+## Back to 2013 
+
+After more digging into how the `read_excel` function determines `col_names`, we can try saying `col_names = FALSE` to not use any for this file, and see if that provides any clues into our errors:
+
+```{r check_out_2013_even_more, cache=TRUE, error=TRUE}
+names_types_2013 <- read_excel(new_filenames[i],
+                               col_names = FALSE,
+                               col_types = OSHPD_col_types)
+```
+
+That didn't work. Maybe if we use the `col_names` from the first year of data?
+
+```{r check_out_2013_even_even_more, cache=TRUE, error=TRUE}
+names_types_2013_2 <- read_excel(new_filenames[i],
+                                 col_names = colnames(yearly_frames[[1]]),
+                                 col_types = OSHPD_col_types)
+```
+
+## "Fake blank" cells of doom
+
+Googling this new error message, I encounter [a suggestion here](https://github.com/hadley/readxl/issues/81) that there may be secret "fake blank" columns in the Excel file. (You can also see in that github thread that I raised this issue for our data with the `readxl` package author.) What this means is there was some data in those columns at some point in this spreadsheet's past, but they were blanked out by a person (though not deleted), so Excel treats them as if they have data in them. They don't any longer, but `read_excel` is still getting a signal from Excel making it think there's something over there to be read in. Confusing? Very!
+
+If we press *Command*-*fn*-*Right arrow* on a Mac laptop in Excel, (*Cntl-End* on a full Windows keyboard), it jumps to what Excel thinks is the last cell, which is one column over from the visible range of the data. Indeed, this column to the right of where we think our data ends is actually a "fake blank" column that we'll need to account for. Thus, we should be able to get the import to work if add an entry for the last column as type `"blank"` for 2013. `read_excel` will drop `"blank"` columns automatically.
+
+```{r reimport_2013_no_blanks, cache=TRUE, error=TRUE}
+blanks_2013 <- read_excel("../Downloaded_data/CA_OSHPD_utilization_2013.xls",
+                          col_types = c(OSHPD_col_types, "blank"))
+dim(blanks_2013)
+```
+
+## Whack-a-mole in 2014 and 2015
+
+Victory! Now I'll have to make a change in the loop for 2013's columns to add one more entry to the `col_types` for that stupid blank column. Also, for consistency, this time I want to manually specify column names and skip the header row for each file with `skip = 1`. (Before, it was using the header row just to get the column names, but now I don't want it to do that since they change from file to file, so we need to tell `read_excel` to skip it.)
+
+Brace yourself for several hundred lines of errors to scroll past:
+
+```{r read_in_data_3, cache=TRUE, error=TRUE}
+OSHPD_col_names <- colnames(yearly_frames[[1]])
+
+for(i in seq_along(new_filenames)) {
+    if(file.exists(new_filenames[i])) {
+        print(paste0("Now trying ", years[i]))
+        # set column names and types for standardized import
+        cnames <- OSHPD_col_names
+        ctypes <- OSHPD_col_types  
+        if(years[i] == 2013) {
+            cnames <- c(OSHPD_col_names, "missing")
+            ctypes <- c(OSHPD_col_types, "blank")
+        }
+        yearly_frames[[i]] <- read_excel(new_filenames[i],
+                                         col_names = cnames,
+                                         col_types = ctypes,
+                                         skip = 1) # ignore header
+    }
+}
+```
+
+Dang! This time, we got that error message for 2015, but also all those warnings with 2014 in column 18 (`r OSHPD_col_names[18]` is what we're calling it).
+
+## 2014: manually fixing a column type
+
+First, fixing the 2014 issue: When I open that file in Excel, I see some ding-dong has stored column 18 as text instead of a number (there are little green warning flags about this). I'll make an exception for 2014 and read column 18 in as a character, and then convert it to numeric using `mutate_each_` in `dplyr` (preferring not to mess with the original Excel files if I don't absolutely have to).
+
+Note: the `_` at the end of `mutate_each_` means we use what's called *standard evaluation*, where the variables are given as character vector values rather than "naked" as we usually do with `dplyr`. This is convenient in this case because I want to refer to the variable to convert by position in the column name vector I made rather that typing it manually. Every `dplyr` function has a `_` standard evaluation version. See the [non-standard evaluation vignette](https://cran.r-project.org/web/packages/dplyr/vignettes/nse.html) for more details.
+
+```{r read_in_data_4, cache=TRUE, error=TRUE}
+for(i in seq_along(new_filenames)) {
+    if(file.exists(new_filenames[i])) {
+        print(paste0("Now trying ", years[i]))
+        # set column names and types for standardized import
+        cnames <- OSHPD_col_names
+        ctypes <- OSHPD_col_types  
+        if(years[i] == 2013) {
+            cnames <- c(OSHPD_col_names, "missing")
+            ctypes <- c(OSHPD_col_types, "blank")
+        }
+        # special character column type in 2014
+        if(years[i] == 2014) {
+            ctypes[18] <- "text"
+        }
+        yearly_frames[[i]] <- read_excel(new_filenames[i],
+                                         col_names = OSHPD_col_names,
+                                         col_types = ctypes,
+                                         skip = 1) # ignore header
+        # convert 2014 column 18 to numeric
+        if(years[i] == 2014) {
+            # use mutate_each_ (not plain mutate) so that I can refer
+            # to columns as quoted values in conversion
+            yearly_frames[[i]] <- yearly_frames[[i]] %>%
+                mutate_each_(funs(as.numeric),
+                             OSHPD_col_names[18])
+        }
+    }
+}
+```
+
+## 2015: an unexpected "gift"
+
+Okay, so now 2014 is fixed. What is 2015's problem?
+
+```{r check_out_2015, cache=TRUE, error=TRUE}
+plain_2015 <- read_excel(new_filenames[i])
+ncol(plain_2015)
+```
+
+The phone number I can deal with. My bigger problem is someone thought it would be nice to provide undocumented extra columns for 2015. So kind! What are these? I'll make a data frame comparing these variables to the ones in the older files, padding out with missing values for the older files:
+
+```{r col_comparison, cache=TRUE, error=TRUE}
+extra_col_count <- ncol(plain_2015) - length(OSHPD_col_names)
+(compare_cols <- data.frame(names_2015 = colnames(plain_2015),
+                            names_other = c(OSHPD_col_names,
+                                            rep("NA", extra_col_count))))
+```
+
+From this, we see that the columns match up to the new ones, and the new ones are undocumented information apparently not provided for previous years. Looking at the file, these new columns are all numeric. I'll take the names from what we have and specify that these are numeric in the next version of this loop (warning warning: lots of warnings to follow!):
+
+```{r read_in_data_5, cache=TRUE, error=TRUE}
+OSHPD_col_types_2015 <- c(OSHPD_col_types, rep("numeric", extra_col_count))
+OSHPD_col_names_2015 <- c(OSHPD_col_names,
+                          colnames(plain_2015)[(length(OSHPD_col_names) + 1):length(OSHPD_col_types_2015)])
+                          
+for(i in seq_along(new_filenames)) {
+    if(file.exists(new_filenames[i])) {
+        print(paste0("Now trying ", years[i]))
+        # set column names and types for standardized import
+        cnames <- OSHPD_col_names
+        ctypes <- OSHPD_col_types  
+        if(years[i] == 2013) {
+            cnames <- c(OSHPD_col_names, "missing")
+            ctypes <- c(OSHPD_col_types, "blank")
+        }
+        # special character column type in 2014
+        if(years[i] == 2014) {
+            ctypes[18] <- "text"
+        }
+        if(years[i] == 2015) {
+            ctypes <- OSHPD_col_types_2015
+            cnames <- OSHPD_col_names_2015
+        }
+        yearly_frames[[i]] <- read_excel(new_filenames[i],
+                                         col_names = cnames,
+                                         col_types = ctypes,
+                                         skip = 1) # ignore header
+        # convert 2014 column 18 to numeric
+        if(years[i] == 2014) {
+            # use mutate_each_ (not plain mutate) so that I can refer
+            # to columns as quoted values in conversion
+            yearly_frames[[i]] <- yearly_frames[[i]] %>%
+                mutate_each_(funs(as.numeric),
+                             cnames[18])
+        }
+    }
+}
+```
+
+## Back to the drawing board with 2015's dates
+
+UGH. The 2015 file read in this time, extra columns and all, but I'm getting warning messages about the two date columns (4 and 5). There's nothing weird-looking with the Excel file except that the dates are MM/DD/YYYY instead of M/D/YYYY like in the other files, so I'll chalk this up to `readxl` being a useful package but not completely robust. I'll fix this using a similar approach as with the weird not-a-number-but-should-have-been column in the 2014 file: read as character, then convert to a date (using the `lubridate` package).
+
+```{r read_in_data_6, cache=TRUE, error=TRUE}
+OSHPD_col_types_2015[4:5] <- "text"
+                          
+for(i in seq_along(new_filenames)) {
+    if(file.exists(new_filenames[i])) {
+        print(paste0("Now trying ", years[i]))
+        # set column names and types for standardized import
+        cnames <- OSHPD_col_names
+        ctypes <- OSHPD_col_types  
+        if(years[i] == 2013) {
+            cnames <- c(OSHPD_col_names, "missing")
+            ctypes <- c(OSHPD_col_types, "blank")
+        }
+        # special character column type in 2014
+        if(years[i] == 2014) {
+            ctypes[18] <- "text"
+        }
+        if(years[i] == 2015) {
+            ctypes <- OSHPD_col_types_2015
+            cnames <- OSHPD_col_names_2015
+        }
+        yearly_frames[[i]] <- read_excel(new_filenames[i],
+                                         col_names = cnames,
+                                         col_types = ctypes,
+                                         skip = 1) # ignore header
+        # convert 2014 column 18 to numeric
+        if(years[i] == 2014) {
+            # use mutate_each_ (not plain mutate) so that I can refer
+            # to columns as quoted values in conversion
+            yearly_frames[[i]] <- yearly_frames[[i]] %>%
+                mutate_each_(funs(as.numeric),
+                             cnames[18])
+        }
+        if(years[i] == 2015) {
+            yearly_frames[[i]] <- yearly_frames[[i]] %>%
+                mutate_each_(funs(mdy),
+                             cnames[4:5])
+        }
+    }
+}
+```
+
+FINALLY!
+
+If I wasn't being transparent about this iterative process, basically all I would have shown you is this last loop and the variable definitions that went into it.
+
+
+# Combining everything
+
+After much effort, we have read all the data in. Let's combine the files for all years using `bind_rows` from `dplyr`. I'm going to use the `.id` argument in `bind_rows` to add a column called `orig_file` for which file number each row came from for further debugging.
+
+```{r combine}
+# combine everything
+CA_OSHPD_util <- bind_rows(yearly_frames, .id = "orig_file")
+dim(CA_OSHPD_util)
+summary(CA_OSHPD_util)
+```
+
+## Missing rows
+
+This worked well. One thing I see is that there are some unexpected missing values in things that seem like they shouldn't have any, like the `YEAR_QTR` column. Which file did these come from?
+
+```{r inspect_NA}
+CA_OSHPD_util %>%
+    filter(is.na(YEAR_QTR))
+```
+
+Some from file 12 (`r years[12]`), some from file 16 (`r years[16]`). I'm happy I made that file source column to tell me this! Let's look at those files in the list and see if there were extra rows read in at the end:
+
+```{r inspect_NA_2}
+tail(yearly_frames[[12]])
+tail(yearly_frames[[16]])
+```
+
+Indeed, there were some rows missing basically all info at the end of these files. If I look at the original Excel files, these were "fake blank" rows (like the fake blank columns that caused me grief with 2013). Fake blank rows are no sweat, though, compared with the fake-blank columns breaking `read_excel`. I'll just filter out these rows by looking for `NA` values in a column that should be fully populated.
+
+```{r remove_NA}
+# combine everything
+CA_OSHPD_util <- CA_OSHPD_util %>%
+    filter(!is.na(YEAR_QTR))
+```
+
+# Character column fixing
+
+```{r show_preview}
+head(CA_OSHPD_util)
+```
+
+Something I'm observing looking at the file is that some of the values in the character columns that look like numbers (`FAC_NO`, `HSA`, `HFPA`) have weird decimals added due to Excel storing the info in "general" format some years and "text" format in others:
+
+```{r show_weird_decimals}
+CA_OSHPD_util %>%
+    select(FAC_NO, HSA, HFPA) %>%
+    head(10)
+```
+
+These are going to be annoying if I wanted to group by any of these variables, because I need identifiers to be consistent across time. So, I want to take periods and any zeros after in these columns and remove them. We'll see more about this in the string-cleaning lecture, but I'll use the `gsub` function in base R inside `mutate_each` to do this to each of these variables.
+
+```{r fix_character_cols}
+CA_OSHPD_util <- CA_OSHPD_util %>%
+    # translating the regular expression pattern:
+    # \\. matches the location of the period.
+    # 0+ matches at least one zero and possibly more following that period.
+    # replacement for period + 0s is nothing (empty string)
+    mutate_each(funs(gsub(pattern = "\\.0+",
+                          x = .,
+                          replacement = "")),
+                # variables to fix
+                FAC_NO, HSA, HFPA)
+
+CA_OSHPD_util %>%
+    select(FAC_NO, HSA, HFPA) %>%
+    head(10)
+```
+
+Much better! There are probably more issues at this point, but not ones I'm noticing. This is good enough for now.
+
+# Exporting the file and memory cleanup
+
+Now, I'll save this formatted R file in a `.rds` format so that I can use it for whatever I want in the future.
+
+```{r save_R}
+# save the data in an R file
+saveRDS(CA_OSHPD_util, "../Downloaded_data/CA_OSHPD_util.rds")
+```
+
+I'll also get rid of the list from memory since I don't need it anymore. This isn't strictly needed, but if these files were larger, I'd definitely want to do this to free up RAM.
+
+```{r clear_mem}
+rm(yearly_frames)
+```
+
+# Session information
+
+```{r session_info}
+sessionInfo()
+```
