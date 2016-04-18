@@ -44,18 +44,6 @@ Things to identify:
 3. Is what happens in the loop affected by previous iterations?
 
 
-Looping strategies
-===
-incremental: true
-
-* `dplyr::do()` and `broom`: partition a data frame, do the same thing to each partition
-* `for` or `while` loops: general purpose programming approach
-* Vectorization: use fast built-in math functions
-* `lapply`: apply the same function over a list
-    + `replicate`: special case of `lapply` when calling the same function a bunch of times (no changing inputs, usually )
-* `apply`: apply the same function over rows or columns of a matrix
-
-
 Programming agenda 
 ===
 
@@ -63,11 +51,12 @@ Today:
 
 * `dplyr` and `broom`
 * `for` and `while` loop programming
-* Vectorization
+* Vectorization to avoid loops
 
 Next week:
 
 * Writing your own functions!
+* `dplyr::summarize_each`, `dplyr::mutate_each`
 * `lapply`, `replicate`
 * `apply`
 
@@ -413,7 +402,7 @@ seq_along
 ===
 incremental: true
 
-When you want to iterate over something that isn't numeric but want to keep numeric track of where you are in the loop, `seq_along` is useful:
+When you want to loop over something that isn't numeric but want to have a numeric index of where you are in the loop, `seq_along` is useful:
 
 
 ```r
@@ -600,7 +589,7 @@ if, else
 ===
 type: incremental
 
-You've seen `ifelse()` before for logical checks on a whole vector. For checking whether a single condition holds and doing more complex actions, you can use `if()` and `else`:
+You've seen `ifelse` before for logical checks on a whole vector. For checking whether a single condition holds and doing more complex actions, you can use `if()` and `else`:
 
 
 ```r
@@ -637,38 +626,6 @@ incremental: true
 ```
 
 
-Difficult real-world example
-===
-type: section
-
-Importing many files
-===
-
-Let us journey into...**data hell!**
-
-![Garden of Earthly Delights](https://upload.wikimedia.org/wikipedia/commons/f/f6/Mad_meg.jpg)
-
-[California Office of Statewide Health Planning and Development Hospital Quarterly Financial and Utilization Data Files](http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/CmpleteData/default.asp)
-
-
-Data prep sketch outline
-===
-incremental: true
-
-- Pre-allocate a list for the individual files
-- Inside a `for` loop `seq_along`ing the file names:
-    + Make a URL and download file 
-    + Read the file in with Excel-reading package and store in list
-- Use `dplyr::bind_rows` to combine all tables into one
-- Remove the list to save memory
-- Clean up the combined data
-- Some variations on general process you might encounter:
-    + Unzip files first (`unzip`)
-    + Use `if` logic to clean up data differently depending on file
-
-**HOMEWORK**: read the [demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html).
-
-
 while loops
 ===
 incremental: true
@@ -699,6 +656,38 @@ num_flips # follows negative binomial distribution
 ```
 
 
+Difficult real-world example
+===
+type: section
+
+Importing many files
+===
+
+Let us journey into...**data hell!**
+
+![Garden of Earthly Delights](https://upload.wikimedia.org/wikipedia/commons/f/f6/Mad_meg.jpg)
+
+[California Office of Statewide Health Planning and Development Hospital Quarterly Financial and Utilization Data Files](http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/CmpleteData/default.asp)
+
+
+Data prep sketch outline
+===
+incremental: true
+
+- Pre-allocate a list for the individual files
+- Inside a `for` loop `seq_along`ing the file names:
+    + Make a URL and download file 
+    + Read the file in with Excel-reading package and store in list
+- Use `dplyr::bind_rows` to combine all tables into one
+- Remove the list to save memory
+- Clean up the combined data
+- Some variations on general process you might encounter:
+    + Unzip files first (`unzip`)
+    + Use `if` logic to clean up data differently depending on file
+
+**HOMEWORK**: read the [extended writeup on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html).
+
+
 Vectorization
 ===
 type: section
@@ -712,7 +701,7 @@ We have a vector of numbers, and we want to add 1 to each element.
 my_vector <- rnorm(100000)
 ```
 
-Naive `for` loop approach:
+A `for` loop approach works but is slow:
 
 ```r
 for_start <- proc.time()
@@ -725,7 +714,7 @@ for(position in 1:length(my_vector)) {
 
 ```
    user  system elapsed 
-  0.217   0.011   0.253 
+  0.213   0.010   0.255 
 ```
 
 
@@ -742,7 +731,7 @@ new_vector <- my_vector + 1
 
 ```
    user  system elapsed 
-  0.004   0.001   0.005 
+  0.005   0.000   0.005 
 ```
 
 ```r
@@ -751,7 +740,7 @@ for_time / vec_time
 
 ```
    user  system elapsed 
-  54.25   11.00   50.60 
+   42.6     Inf    51.0 
 ```
 
 Vector/matrix arithmetic is implemented using fast, optimized functions that a `for` loop can't compete with.
@@ -798,7 +787,7 @@ cumsum(1:7)
 [1]  1  3  6 10 15 21 28
 ```
 
-* `pmax` and `pmin` take a matrix or set of vectors, output the min or max of each entry (after recycling):
+* `pmax` and `pmin` take a matrix or set of vectors, output the min or max for each **p**osition (after recycling):
 
 ```r
 pmax(c(0, 2, 4), c(1, 1, 1), c(2, 2, 2))
@@ -814,6 +803,10 @@ Lab exercise
 type: section
 
 
+Cross validation
+===
+
+**Cross validation* is a way of assessing how well models fit your data
 take some data, partition into folds, fit model, save predictions for left-out data, look at how those predictions do. then do for more models (maybe increasing polynomial terms using `poly`), so we'll have nested loops.
 
 for more info: [Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/), Chapter 5.
@@ -822,4 +815,4 @@ Homework
 ===
 type: section
 
-Read the [data downloading demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html). I hope that your forays into automated data downloading and cleaning are smoother than this one!
+Read the [data downloading demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html). I hope that your forays into automated data downloading and cleaning are smoother than this one was!

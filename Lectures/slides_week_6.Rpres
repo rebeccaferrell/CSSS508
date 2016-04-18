@@ -45,18 +45,6 @@ Things to identify:
 3. Is what happens in the loop affected by previous iterations?
 
 
-Looping strategies
-===
-incremental: true
-
-* `dplyr::do()` and `broom`: partition a data frame, do the same thing to each partition
-* `for` or `while` loops: general purpose programming approach
-* Vectorization: use fast built-in math functions
-* `lapply`: apply the same function over a list
-    + `replicate`: special case of `lapply` when calling the same function a bunch of times (no changing inputs, usually )
-* `apply`: apply the same function over rows or columns of a matrix
-
-
 Programming agenda 
 ===
 
@@ -64,11 +52,12 @@ Today:
 
 * `dplyr` and `broom`
 * `for` and `while` loop programming
-* Vectorization
+* Vectorization to avoid loops
 
 Next week:
 
 * Writing your own functions!
+* `dplyr::summarize_each`, `dplyr::mutate_each`
 * `lapply`, `replicate`
 * `apply`
 
@@ -307,7 +296,7 @@ seq_along
 ===
 incremental: true
 
-When you want to iterate over something that isn't numeric but want to keep numeric track of where you are in the loop, `seq_along` is useful:
+When you want to loop over something that isn't numeric but want to have a numeric index of where you are in the loop, `seq_along` is useful:
 
 ```{r}
 for(a in seq_along(some_letters)) {
@@ -363,7 +352,7 @@ if, else
 ===
 type: incremental
 
-You've seen `ifelse()` before for logical checks on a whole vector. For checking whether a single condition holds and doing more complex actions, you can use `if()` and `else`:
+You've seen `ifelse` before for logical checks on a whole vector. For checking whether a single condition holds and doing more complex actions, you can use `if()` and `else`:
 
 ```{r, eval=FALSE}
 for(i in 1:10) {
@@ -397,6 +386,24 @@ for(i in 1:10) {
 ```
 
 
+while loops
+===
+incremental: true
+
+Another looping structure is the `while` loop. Rather than iterating over a predefined vector, the loop keeps going until some condition is no longer true.
+
+```{r}
+num_heads <- 0; num_flips <- 0
+while(num_heads < 4) {
+    coin_flip <- rbinom(n = 1, size = 1, prob = 0.5)
+    if(coin_flip == 1) { num_heads <- num_heads + 1 }
+    num_flips <- num_flips + 1
+}
+num_heads
+num_flips # follows negative binomial distribution
+```
+
+
 Difficult real-world example
 ===
 type: section
@@ -426,25 +433,7 @@ incremental: true
     + Unzip files first (`unzip`)
     + Use `if` logic to clean up data differently depending on file
 
-**HOMEWORK**: read the [demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html).
-
-
-while loops
-===
-incremental: true
-
-Another looping structure is the `while` loop. Rather than iterating over a predefined vector, the loop keeps going until some condition is no longer true.
-
-```{r}
-num_heads <- 0; num_flips <- 0
-while(num_heads < 4) {
-    coin_flip <- rbinom(n = 1, size = 1, prob = 0.5)
-    if(coin_flip == 1) { num_heads <- num_heads + 1 }
-    num_flips <- num_flips + 1
-}
-num_heads
-num_flips # follows negative binomial distribution
-```
+**HOMEWORK**: read the [extended writeup on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html).
 
 
 Vectorization
@@ -459,7 +448,7 @@ We have a vector of numbers, and we want to add 1 to each element.
 my_vector <- rnorm(100000)
 ```
 
-Naive `for` loop approach:
+A `for` loop approach works but is slow:
 ```{r}
 for_start <- proc.time()
 new_vector <- rep(NA, length(my_vector))
@@ -505,7 +494,7 @@ incremental: true
 cumsum(1:7)
 ```
 
-* `pmax` and `pmin` take a matrix or set of vectors, output the min or max of each entry (after recycling):
+* `pmax` and `pmin` take a matrix or set of vectors, output the min or max for each **p**osition (after recycling):
 ```{r}
 pmax(c(0, 2, 4), c(1, 1, 1), c(2, 2, 2))
 ```
@@ -516,6 +505,10 @@ Lab exercise
 type: section
 
 
+Cross validation
+===
+
+**Cross validation* is a way of assessing how well models fit your data
 take some data, partition into folds, fit model, save predictions for left-out data, look at how those predictions do. then do for more models (maybe increasing polynomial terms using `poly`), so we'll have nested loops.
 
 for more info: [Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/), Chapter 5.
@@ -524,4 +517,4 @@ Homework
 ===
 type: section
 
-Read the [data downloading demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html). I hope that your forays into automated data downloading and cleaning are smoother than this one!
+Read the [data downloading demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html). I hope that your forays into automated data downloading and cleaning are smoother than this one was!

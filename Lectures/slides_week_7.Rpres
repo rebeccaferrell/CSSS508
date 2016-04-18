@@ -7,15 +7,25 @@ width: 1100
 height: 750
 
 
-lapply
-===
-type: section
+
 
 
 Writing simple functions
 ===
 type: section
 
+
+dplyr summarize_each, mutate_each
+===
+type: section
+
+
+standard evaluation, non-standard evaluation
+
+
+lapply
+===
+type: section
 
 replicate
 ===
