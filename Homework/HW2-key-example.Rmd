@@ -54,7 +54,7 @@ ggplot(data = gapminder %>%
 
 While it's great that `ggplot2` automatically gives us a legend for mapped aesthetics, sometimes it can be redundant when we are faceting. This shows one way of dropping an unneeded legend with `guides(color = FALSE)` to drop a color scale (several of the other graphs show other ways) and using some rich color choices with angled x-axis labels for clarity.
 
-```{r mia_nolegend, echo=FALSE}
+```{r mia_nolegend}
 ggplot(data = gapminder,
        aes(x = year, y = gdpPercap,
            group = country, color = continent)) +
