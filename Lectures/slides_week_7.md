@@ -37,7 +37,8 @@ incremental: true
 
 Let's write a function that takes a vector as input and outputs a named vector of the first and last elements:
 
-```{r}
+
+```r
 first_and_last <- function(x) {
     first <- x[1]
     last <- x[length(x)]
@@ -47,8 +48,14 @@ first_and_last <- function(x) {
 
 Test it out:
 
-```{r}
+
+```r
 first_and_last(c(4, 3, 1, 8))
+```
+
+```
+first  last 
+    4     8 
 ```
 
 
@@ -58,14 +65,26 @@ incremental: true
 
 What if I give `first_and_last` a vector of length 1?
 
-```{r}
+
+```r
 first_and_last(7)
+```
+
+```
+first  last 
+    7     7 
 ```
 
 Of length 0?
 
-```{r}
+
+```r
 first_and_last(numeric(0))
+```
+
+```
+first 
+   NA 
 ```
 
 Maybe we want it to be a little smarter.
@@ -77,7 +96,8 @@ incremental: true
 
 Let's make sure we get an error message is the vector is too small:
 
-```{r}
+
+```r
 smarter_first_and_last <- function(x) {
     if(length(x) == 0L) {
         stop("The input has no length!")
@@ -93,66 +113,11 @@ Testing the smarter function
 ===
 incremental: true
 
-```{r}
-smarter_first_and_last(numeric(0))
-smarter_first_and_last(c(4, 3, 1, 8))
+
+
+
+
+
 ```
-
-Cracking open functions
-===
-incremental: true
-
-If you type the function name without any parentheses or arguments, you can see its guts:
-
-```{r}
-smarter_first_and_last
+Error in smarter_first_and_last(numeric(0)) : The input has no length!
 ```
-
-
-General function writing syntax
-===
-
-
-dplyr summarize_each, mutate_each
-===
-type: section
-
-
-standard evaluation, non-standard evaluation
-
-
-lapply
-===
-type: section
-
-replicate
-===
-
-Use `replicate` with repeated random number simulations
-
-example: illustrate central limit theorem
-
-
-apply
-===
-
-apply is trash but old-school R programmers use it and functional programming people like it, so you'll see it and you need to know what it is, but it's not faster than a for loop and debatably clearer
-
-function writing for apply
-===
-
-
-
-
-Homework
-===
-
-Bootstrapping simulation:
-
-- First, randomly generate data, then fit a model, and then do this repeatedly. The standard error is the standard deviation in the estimate of the quantity. This gives us the "truth" for what the standard error is.
-
-- Next, we bootstrap. Randomly generate one set of data. You'll do the sample thing as above, but now you can't generate more new data, so you'll instead sample from it with replacement, then fit the model repeatedly.
-
-- Use ggplot's qqplot to compare the true sampling distribution of the estimator with the bootstrapped estimate.
-
-HW week 7: take HW 6 and now make it functional (do_one()), using replicate.
