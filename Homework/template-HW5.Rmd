@@ -1,7 +1,7 @@
 ---
 title: "HW5: King County general election results, 2012"
 author: "YOUR NAME"
-date: "May 4, 2016"
+date: "May 11, 2016"
 output: html_document
 ---
 
