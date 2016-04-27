@@ -152,7 +152,7 @@ str(spd$`Event Clearance Date`)
 
 ## ------------------------------------------------------------------------
 demo_dts <- spd$`Event Clearance Date`[1:2]
-(date_only <- as.Date(demo_dts))
+(date_only <- as.Date(demo_dts, tz = "America/Los_Angeles"))
 (day_of_week_only <- weekdays(demo_dts))
 (one_hour_later <- demo_dts + dhours(1))
 

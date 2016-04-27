@@ -316,7 +316,7 @@ incremental: true
 * What are the variables?
     + Program, gender
 * What are the values?
-    + Program: Evans School, Public Health, Other
+    + Program: Evans School, Arts & Sciences, Public Health, Other
     + Gender: Female, Male -- **in the column headings, not its own column!**
     + Count: **spread over two columns!**
 
@@ -704,11 +704,11 @@ incremental: true
 
 ```r
 demo_dts <- spd$`Event Clearance Date`[1:2]
-(date_only <- as.Date(demo_dts))
+(date_only <- as.Date(demo_dts, tz = "America/Los_Angeles"))
 ```
 
 ```
-[1] "2016-03-26" "2016-03-26"
+[1] "2016-03-25" "2016-03-25"
 ```
 
 ```r
