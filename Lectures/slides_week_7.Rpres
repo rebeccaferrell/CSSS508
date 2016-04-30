@@ -79,7 +79,7 @@ Let's make sure we get an error message is the vector is too small:
 
 ```{r}
 smarter_first_and_last <- function(x) {
-    if(length(x) == 0L) {
+    if(length(x) == 0L) { # specify integers with "L"
         stop("The input has no length!")
     } else {
         first <- x[1]
@@ -158,18 +158,18 @@ swiss %>%
 Anonymous functions in dplyr
 ===
 
-You can skip even naming your function if you won't use it again. Code below will return the mean divided by the standard deviation for each variable in `swiss`:
+You can skip naming your function if you won't use it again. Code below will return the mean divided by the standard deviation for each variable in `swiss`:
 
 ```{r}
 swiss %>%
-    summarize_each(funs(mean(., na.rm = TRUE) / sd(., na.rm = TRUE)))
+    summarize_each(funs( mean(., na.rm = TRUE) / sd(., na.rm = TRUE) ))
 ```
 
 
 Example passing function with arguments
 ===
 
-From the data downloading demo you read before today, I had this block of code:
+From the data downloading demo, I had this block of code:
 
 ```{r, eval=FALSE}
 CA_OSHPD_util <- CA_OSHPD_util %>%
@@ -188,7 +188,7 @@ CA_OSHPD_util <- CA_OSHPD_util %>%
 Standard and non-standard evaluation
 ===
 
-`dplyr` uses what is called **non-standard evaluation** that lets you refer to "naked" variables without putting quotes around them like `FAC_NO, HSA, HFPA`. There are **standard evaluation** versions of `dplyr` functions that use the quoted versions instead, which can sometimes be more convenient. These end in an underscore (`_`).
+`dplyr` uses what is called **non-standard evaluation** that lets you refer to "naked" variables (no quotes around them) like `FAC_NO, HSA, HFPA`. There are **standard evaluation** versions of `dplyr` functions that use the quoted versions instead, which can sometimes be more convenient. These end in an underscore (`_`).
 
 Example converting character data to dates from the data downloading demo:
 ```{r, eval=FALSE}
@@ -207,15 +207,23 @@ type: section
 lapply: list + applying functions
 ===
 
-
-Anonymous functions in base R
-===
-
-Like with `dplyr`, you can use anonymous functions, but the difference is you'll need to have the `function` part at the beginning:
+`lapply` **apply**s a function over a **l**ist of any kind (not just a data frame), and returns a list:
 
 ```{r}
-lapply(swiss, function(x) mean(x, na.rm = TRUE) / sd(x, na.rm = TRUE))
+my_list <- list("first" = 1:3, "second" = 2:8, "third" = 0:10)
+lapply(my_list, max)
 ```
+
+
+Anonymous functions in lapply
+===
+
+Like with `dplyr`, you can use anonymous functions in `lapply`, but the difference is you'll need to have the `function` part at the beginning:
+
+```{r}
+lapply(my_list, function(x) mean(x, na.rm = TRUE) / sd(x, na.rm = TRUE))
+```
+
 
 replicate
 ===
