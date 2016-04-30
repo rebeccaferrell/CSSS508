@@ -27,233 +27,31 @@ mean5 <- mean(swiss$Infant.Mortality)
 ```
 
 
-Gallant: Don't Repeat Yourself (DRY)
+Gallant: Don't Repeat Yourself (DRY)!
 ===
 incremental: true
 
-Want to avoid repetition and inconsistencies when:
+We want to avoid manual repetition and inconsistencies when we do the same thing over and over. Telling code to repeat tasks for us through *looping* prevents human-introduced errors.
 
-* For each item in a list, doing the same thing to it
-* Partitioning data, fitting same model to each part separately
-* Studying behavior of models under many different samples of data
-* Importing many similar data files, cleaning up each, gluing them together
+Things to identify that inform how we loop:
 
-Things to identify:
-
-1. What we're looping over
-2. What we do in the loop
+1. What we're looping over 
+2. What we do inside each iteration of the loop
 3. Is what happens in the loop affected by previous iterations?
 
 
-Programming agenda 
+Programming and looping agenda 
 ===
 
 **Today:**
 
-* `dplyr` and `broom`
 * `for` and `while` loop programming (most general method)
 * Vectorization to avoid loops
 
 **Next week:**
 
 * Writing your own functions!
-* `dplyr::summarize_each`, `dplyr::mutate_each`
-* `lapply`, `replicate`
-* `apply`
-
-
-Looping dplyr-style
-===
-type: section
-
-
-Motivating example
-===
-
-We will model life expectancy as a function of time within each country in the `gapminder` data. Start with some exploratory data analysis by sampling 20 countries and looking at trends:
-
-```{r warning=FALSE, message=FALSE}
-library(gapminder)
-library(dplyr)
-library(ggplot2)
-set.seed(1234)
-(rando_countries <- sample(unique(gapminder$country), size = 20, replace = FALSE))
-```
-
-
-Life expectancy trends in sample
-===
-
-```{r, fig.width = 10, fig.height = 4, dpi=300, out.width="1100px", out.height="440px"}
-ggplot(gapminder %>% filter(country %in% rando_countries), aes(x = year, y = lifeExp, group = country)) + geom_line() + geom_smooth(method = "lm", size = 0.5) + facet_wrap( ~ country, nrow = 4)
-```
-
-
-Modeling approach
-===
-
-Based on the plot, modeling life expectancy as a linear function of time is a reasonable starting point.
-
-Some countries have much steeper trajectories than others (more improvement in life expectancy). Let's fit a linear regression of life expectancy on time *for each country separately* so we get an intercept and slope per country.
-
-First: re-define time as years since 1980 for easier interpretation of the regression intercepts (i.e. predicted life expectancy in 1980).
-```{r}
-gapminder <- gapminder %>%
-    mutate(time_1980 = year - 1980)
-```
-
-
-dplyr::do()
-===
-
-When the loop involves taking different chunks of your data and taking the same actions on it, the `do` function in the `dplyr` package combined with `group_by` is a good option.
-
-```{r, cache=TRUE}
-gapminder_new <- gapminder %>%
-    group_by(country, continent) %>%
-    do(time_trend = lm(lifeExp ~ time_1980, data = .))
-```
-
-Comments:
-
-* We are grouping by *both* country and continent. Continent is extraneous (each country belongs to one continent), but grouping keeps the variable `continent` on the data and avoids an extra join.
-* The period `.` means "this is where the stuff before the pipe goes in". We haven't been using it much because with `dplyr` functions, data is the first argument.
-
-
-lm output with do
-===
-
-```{r}
-head(gapminder_new, 2)
-```
-
-The data are not "tidy" yet: our model information is all stuck in an `lm` object in the `time_trend` column. We want to pull out for each country:
-
-* Intercept
-* Slope (mean change in life expectancy per year)
-* $R^2$ (proportion of variance in life expectancy explained by time)
-
-
-broom
-===
-
-We'll use the `broom` package, which is designed to tidy up `do` output of statistical functions. Install and load `broom`.
-```{r}
-# install.packages("broom")
-library(broom)
-```
-
-`broom` has three key functions that work across a wide array of statistical models:
-
-* `glance`: a single row summary of model fit ($R^2$, etc.)
-* `tidy`: a tidy representation of a model (coefficients, SEs)
-* `augment`: adds columns with predictions, residuals, etc.
-
-
-glance
-===
-
-`broom`'s `glance` function gets some model summaries:
-
-```{r glance, cache=TRUE}
-gapminder_glance <- gapminder_new %>%
-    glance(time_trend)
-head(gapminder_glance, 2)
-```
-
-
-tidy
-===
-
-`broom`'s `tidy` function extracts coefficients, standard errors, and confidence intervals in tidy format (one row per parameter):
-
-```{r tidy, cache=TRUE}
-gapminder_tidy <- gapminder_new %>%
-    tidy(time_trend, conf.int = TRUE)
-head(gapminder_tidy, 4)
-```
-
-
-Un-tidying tidy
-===
-
-In this case, the data are maybe *too* tidy: we want the coefficients and to have them on the same row. Use `tidyr`'s `spread` from last week to modify:
-
-```{r tidying_tidy, cache=TRUE}
-library(tidyr)
-gapminder_tidy2 <- gapminder_tidy %>%
-    select(country, continent, term, estimate) %>%
-    spread(key = term, value = estimate)
-head(gapminder_tidy2, 3)
-```
-
-
-
-augment
-===
-
-`broom`'s `augment` function could get residuals for each observation if we want:
-
-```{r augment, cache=TRUE}
-gapminder_augment <- gapminder_new %>%
-    augment(time_trend)
-head(gapminder_augment, 2)
-```
-
-
-Combining
-===
-
-Use `left_join` to merge everything of interest:
-
-```{r joining, cache=TRUE}
-gapminder_lm_final <- gapminder_tidy2 %>%
-    # merge on R^2 from the glance file:
-    left_join(gapminder_glance %>%
-                  ungroup() %>% # removes by-continent grouping
-                  # (so that continent doesn't appear twice)
-                  select(country, r.squared),
-              by = "country")
-head(gapminder_lm_final, 3)
-```
-
-
-Possibilities
-===
-
-With `gapminder_lm_final`, we can now easily examine:
-
-* Fitted life expectancies in 1980 across countries
-* Rate of average life expectancy gains during period across countries
-* Countries for which the linear trend fit well (high $R^2$) or didn't (low $R^2$)
-
-Had we kept other variables around, there are many other things we could look at, like regression residual diagnostics.
-
-
-Example: average gains by continent
-===
-
-To make a density plot of average annual life expectancy gains by continent:
-```{r}
-lifeExp_gains <- ggplot(data = gapminder_lm_final,
-       aes(x = time_1980,
-           fill = continent)) +
-    geom_density() +
-    geom_vline(xintercept = 0, size = 2) + 
-    facet_wrap( ~ continent, scales = "free_y") +
-    xlab("Annual life expectancy gain within country (years)") +
-    ggtitle("Country-level average annual life expectancy gains, 1952-2007") +
-    theme_minimal() +
-    theme(legend.position = "none") # no legend
-```
-
-
-Average gains by continent plot
-===
-
-```{r, echo=FALSE, fig.width = 10, fig.height = 5, dpi=300, out.width="1100px", out.height="550px"}
-lifeExp_gains
-```
+* Looping methods that like your special functions
 
 
 for loops
@@ -424,8 +222,7 @@ incremental: true
 - Inside a `for` loop `seq_along`ing the file names:
     + Make a URL and download file 
     + Read the file in with Excel-reading package and store in list
-- Use `dplyr::bind_rows` to combine all tables into one
-- Remove the list to save memory
+- Combine the data for each year into one file
 - Clean up the combined data
 - Some variations on general process you might encounter:
     + Unzip files first (`unzip`)
@@ -503,4 +300,4 @@ type: section
 
 Read the [data downloading demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html). I hope that your forays into automated data downloading and cleaning are smoother than this one was!
 
-Reminder that HW 5 assigned last week is still due next week.
+Reminder: HW 5 assigned last week is due next week.
