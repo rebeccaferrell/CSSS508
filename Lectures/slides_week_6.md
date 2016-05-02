@@ -7,336 +7,78 @@ width: 1100
 height: 750
 
 
+Programming with Goofus and Gallant
+===
+
+![Goofus and Gallant](http://the-toast.net/wp-content/uploads/2014/09/Goofus.jpg)
+
+
 Goofus approach to repetitive data analysis
 ===
 incremental: true
 
-
-
-![Goofus and Gallant](http://the-toast.net/wp-content/uploads/2014/09/Goofus.jpg)
+Goofus finds the means of variables in the `swiss` data by typing in a line of code for each column:
 
 
 ```r
 mean1 <- mean(swiss$Fertility)
 mean2 <- mean(swiss$Agriculture)
-mean3 <- mean(swiss$Examination)
+mean3 <- mean(swissExamination)
 mean4 <- mean(swiss$Fertility)
 mean5 <- mean(swiss$Catholic)
 mean5 <- mean(swiss$Infant.Mortality)
+c(mean1, mean2 mean3, mean4, mean5, man6)
 ```
 
+Can you spot the problems?
 
-Gallant: Don't Repeat Yourself (DRY)
+How angry would Gallant be if the `swiss` data had 200 columns instead of 6?
+
+
+Gallant
 ===
 incremental: true
 
-Want to avoid repetition and inconsistencies when:
-
-* For each item in a list, doing the same thing to it
-* Partitioning data, fitting same model to each part separately
-* Studying behavior of models under many different samples of data
-* Importing many similar data files, cleaning up each, gluing them together
-
-Things to identify:
-
-1. What we're looping over
-2. What we do in the loop
-3. Is what happens in the loop affected by previous iterations?
 
 
-Programming agenda 
+You will learn more Gallant solutions today (and better ones next week):
+
+```r
+swiss_means <- setNames(numeric(ncol(swiss)), colnames(swiss))
+for(i in seq_along(swiss)) {
+    swiss_means[i] <- mean(swiss[[i]])
+}
+swiss_means
+```
+
+```
+       Fertility      Agriculture      Examination        Education 
+            70.1             50.7             16.5             11.0 
+        Catholic Infant.Mortality 
+            41.1             19.9 
+```
+
+
+Don't Repeat Yourself (DRY)!
+===
+
+!["never let them see you sweat"](http://3.bp.blogspot.com/-8i111TS2ZuM/UVTuwSOFSEI/AAAAAAAAOn0/j5pSrEpJPXI/s1600/womens+deodorant.jpg)
+
+The **DRY** idea: computers are much better at doing the same thing over and over again than we are. Writing code to repeat tasks for us prevents Goofus goofs.
+
+
+Programming and looping agenda 
 ===
 
 **Today:**
 
-* `dplyr` and `broom`
-* `for` and `while` loop programming (most general method)
+* `for` and `while` loop programming (general methods)
 * Vectorization to avoid loops
 
 **Next week:**
 
 * Writing your own functions!
-* `dplyr::summarize_each`, `dplyr::mutate_each`
-* `lapply`, `replicate`
-* `apply`
-
-
-Looping dplyr-style
-===
-type: section
-
-
-Motivating example
-===
-
-We will model life expectancy as a function of time within each country in the `gapminder` data. Start with some exploratory data analysis by sampling 20 countries and looking at trends:
-
-
-```r
-library(gapminder)
-library(dplyr)
-library(ggplot2)
-set.seed(1234)
-(rando_countries <- sample(unique(gapminder$country), size = 20, replace = FALSE))
-```
-
-```
- [1] Burkina Faso        Myanmar             Morocco             Mozambique          Spain              
- [6] Zambia              Albania             Croatia             Nepal               Kenya              
-[11] New Zealand         Kuwait              Dominican Republic  Sri Lanka           Ecuador            
-[16] Romania             Trinidad and Tobago Czech Republic      Chile               Congo, Rep.        
-142 Levels: Afghanistan Albania Algeria Angola Argentina Australia Austria Bahrain Bangladesh Belgium Benin ... Zimbabwe
-```
-
-
-Life expectancy trends in sample
-===
-
-
-```r
-ggplot(gapminder %>% filter(country %in% rando_countries), aes(x = year, y = lifeExp, group = country)) + geom_line() + geom_smooth(method = "lm", size = 0.5) + facet_wrap( ~ country, nrow = 4)
-```
-
-<img src="slides_week_6-figure/unnamed-chunk-2-1.png" title="plot of chunk unnamed-chunk-2" alt="plot of chunk unnamed-chunk-2" width="1100px" height="440px" />
-
-
-Modeling approach
-===
-
-Based on the plot, modeling life expectancy as a linear function of time is a reasonable starting point.
-
-Some countries have much steeper trajectories than others (more improvement in life expectancy). Let's fit a linear regression of life expectancy on time *for each country separately* so we get an intercept and slope per country.
-
-First: re-define time as years since 1980 for easier interpretation of the regression intercepts (i.e. predicted life expectancy in 1980).
-
-```r
-gapminder <- gapminder %>%
-    mutate(time_1980 = year - 1980)
-```
-
-
-dplyr::do()
-===
-
-When the loop involves taking different chunks of your data and taking the same actions on it, the `do` function in the `dplyr` package combined with `group_by` is a good option.
-
-
-```r
-gapminder_new <- gapminder %>%
-    group_by(country, continent) %>%
-    do(time_trend = lm(lifeExp ~ time_1980, data = .))
-```
-
-Comments:
-
-* We are grouping by *both* country and continent. Continent is extraneous (each country belongs to one continent), but grouping keeps the variable `continent` on the data and avoids an extra join.
-* The period `.` means "this is where the stuff before the pipe goes in". We haven't been using it much because with `dplyr` functions, data is the first argument.
-
-
-lm output with do
-===
-
-
-```r
-head(gapminder_new, 2)
-```
-
-```
-Source: local data frame [2 x 3]
-
-      country continent time_trend
-       (fctr)    (fctr)      (chr)
-1 Afghanistan      Asia    <S3:lm>
-2     Albania    Europe    <S3:lm>
-```
-
-The data are not "tidy" yet: our model information is all stuck in an `lm` object in the `time_trend` column. We want to pull out for each country:
-
-* Intercept
-* Slope (mean change in life expectancy per year)
-* $R^2$ (proportion of variance in life expectancy explained by time)
-
-
-broom
-===
-
-We'll use the `broom` package, which is designed to tidy up `do` output of statistical functions. Install and load `broom`.
-
-```r
-# install.packages("broom")
-library(broom)
-```
-
-`broom` has three key functions that work across a wide array of statistical models:
-
-* `glance`: a single row summary of model fit ($R^2$, etc.)
-* `tidy`: a tidy representation of a model (coefficients, SEs)
-* `augment`: adds columns with predictions, residuals, etc.
-
-
-glance
-===
-
-`broom`'s `glance` function gets some model summaries:
-
-
-```r
-gapminder_glance <- gapminder_new %>%
-    glance(time_trend)
-head(gapminder_glance, 2)
-```
-
-```
-Source: local data frame [2 x 13]
-Groups: country, continent [2]
-
-      country continent r.squared adj.r.squared    sigma statistic      p.value    df    logLik      AIC      BIC
-       (fctr)    (fctr)     (dbl)         (dbl)    (dbl)     (dbl)        (dbl) (int)     (dbl)    (dbl)    (dbl)
-1 Afghanistan      Asia 0.9477123     0.9424835 1.222788  181.2494 9.835213e-08     2 -18.34693 42.69387 44.14859
-2     Albania    Europe 0.9105778     0.9016355 1.983062  101.8290 1.462763e-06     2 -24.14904 54.29807 55.75279
-Variables not shown: deviance (dbl), df.residual (int)
-```
-
-
-tidy
-===
-
-`broom`'s `tidy` function extracts coefficients, standard errors, and confidence intervals in tidy format (one row per parameter):
-
-
-```r
-gapminder_tidy <- gapminder_new %>%
-    tidy(time_trend, conf.int = TRUE)
-head(gapminder_tidy, 4)
-```
-
-```
-Source: local data frame [4 x 9]
-Groups: country, continent [2]
-
-      country continent        term   estimate  std.error statistic      p.value   conf.low  conf.high
-       (fctr)    (fctr)       (chr)      (dbl)      (dbl)     (dbl)        (dbl)      (dbl)      (dbl)
-1 Afghanistan      Asia (Intercept) 37.6164977 0.35313656 106.52111 1.303138e-16 36.8296604 38.4033350
-2 Afghanistan      Asia   time_1980  0.2753287 0.02045093  13.46289 9.835213e-08  0.2297612  0.3208962
-3     Albania    Europe (Intercept) 68.6002583 0.57270070 119.78379 4.033976e-17 67.3242016 69.8763149
-4     Albania    Europe   time_1980  0.3346832 0.03316639  10.09104 1.462763e-06  0.2607839  0.4085825
-```
-
-
-Un-tidying tidy
-===
-
-In this case, the data are maybe *too* tidy: we want the coefficients and to have them on the same row. Use `tidyr`'s `spread` from last week to modify:
-
-
-```r
-library(tidyr)
-gapminder_tidy2 <- gapminder_tidy %>%
-    select(country, continent, term, estimate) %>%
-    spread(key = term, value = estimate)
-head(gapminder_tidy2, 3)
-```
-
-```
-Source: local data frame [3 x 4]
-Groups: country, continent [3]
-
-      country continent (Intercept) time_1980
-       (fctr)    (fctr)       (dbl)     (dbl)
-1 Afghanistan      Asia    37.61650 0.2753287
-2     Albania    Europe    68.60026 0.3346832
-3     Algeria    Africa    59.31481 0.5692797
-```
-
-
-
-augment
-===
-
-`broom`'s `augment` function could get residuals for each observation if we want:
-
-
-```r
-gapminder_augment <- gapminder_new %>%
-    augment(time_trend)
-head(gapminder_augment, 2)
-```
-
-```
-Source: local data frame [2 x 11]
-Groups: country, continent [1]
-
-      country continent lifeExp time_1980  .fitted   .se.fit     .resid      .hat   .sigma   .cooksd .std.resid
-       (fctr)    (fctr)   (dbl)     (dbl)    (dbl)     (dbl)      (dbl)     (dbl)    (dbl)     (dbl)      (dbl)
-1 Afghanistan      Asia  28.801       -28 29.90729 0.6639995 -1.1062949 0.2948718 1.211813 0.2427205 -1.0774216
-2 Afghanistan      Asia  30.332       -23 31.28394 0.5799442 -0.9519382 0.2249417 1.237512 0.1134714 -0.8842813
-```
-
-
-Combining
-===
-
-Use `left_join` to merge everything of interest:
-
-
-```r
-gapminder_lm_final <- gapminder_tidy2 %>%
-    # merge on R^2 from the glance file:
-    left_join(gapminder_glance %>%
-                  ungroup() %>% # removes by-continent grouping
-                  # (so that continent doesn't appear twice)
-                  select(country, r.squared),
-              by = "country")
-head(gapminder_lm_final, 3)
-```
-
-```
-Source: local data frame [3 x 5]
-Groups: country, continent [3]
-
-      country continent (Intercept) time_1980 r.squared
-       (fctr)    (fctr)       (dbl)     (dbl)     (dbl)
-1 Afghanistan      Asia    37.61650 0.2753287 0.9477123
-2     Albania    Europe    68.60026 0.3346832 0.9105778
-3     Algeria    Africa    59.31481 0.5692797 0.9851172
-```
-
-
-Possibilities
-===
-
-With `gapminder_lm_final`, we can now easily examine:
-
-* Fitted life expectancies in 1980 across countries
-* Rate of average life expectancy gains during period across countries
-* Countries for which the linear trend fit well (high $R^2$) or didn't (low $R^2$)
-
-Had we kept other variables around, there are many other things we could look at, like regression residual diagnostics.
-
-
-Example: average gains by continent
-===
-
-To make a density plot of average annual life expectancy gains by continent:
-
-```r
-lifeExp_gains <- ggplot(data = gapminder_lm_final,
-       aes(x = time_1980,
-           fill = continent)) +
-    geom_density() +
-    geom_vline(xintercept = 0, size = 2) + 
-    facet_wrap( ~ continent, scales = "free_y") +
-    xlab("Annual life expectancy gain within country (years)") +
-    ggtitle("Country-level average annual life expectancy gains, 1952-2007") +
-    theme_minimal() +
-    theme(legend.position = "none") # no legend
-```
-
-
-Average gains by continent plot
-===
-
-<img src="slides_week_6-figure/unnamed-chunk-8-1.png" title="plot of chunk unnamed-chunk-8" alt="plot of chunk unnamed-chunk-8" width="1100px" height="550px" />
+* Looping methods based on functions
 
 
 for loops
@@ -348,12 +90,54 @@ for loops
 ===
 incremental: true
 
-`for` loops are the most general kind of loop. You provide a vector, and inside the loop, it assigns the first value to some variable, does stuff, increments the variable to the next value, and keeps going until it runs out of values.
+`for` loops are the most general kind of loop, found in pretty much every programming language.
+
+Conceptually:
+
+* Given a set of values...
+* You set a variable equal to the first value and enter the loop...
+* In the loop:
+    + Do some set of things (maybe depending on current value)...
+    + Update to the next value...
+* ...and keep going until you run out of values.
+
+
+
+for loop: toy example
+===
+incremental: true
+
+
+```r
+for(i in 1:10) {
+    # inside for, output won't show up w/o "print"
+    print(i^2) 
+}
+```
+
+```
+[1] 1
+[1] 4
+[1] 9
+[1] 16
+[1] 25
+[1] 36
+[1] 49
+[1] 64
+[1] 81
+[1] 100
+```
+
+
+
+
+These do the same thing
+===
+incremental: true
 
 
 ```r
 for(i in 1:3) {
-    # inside for, output won't show up w/o "print"
     print(i^2) 
 }
 ```
@@ -364,14 +148,54 @@ for(i in 1:3) {
 [1] 9
 ```
 
-Iterating over indices `1:n` is very common. `n` might be a vector length or number of rows/columns in matrix or data frame.
+***
 
+
+```r
+i <- 1
+print(i^2) 
+```
+
+```
+[1] 1
+```
+
+```r
+i <- 2
+print(i^2)
+```
+
+```
+[1] 4
+```
+
+```r
+i <- 3
+print(i^2)
+```
+
+```
+[1] 9
+```
+
+
+Iteration conventions
+===
+incremental: true
+
+* We call what happens in the loop for a particular value one **iteration**. 
+
+* Iterating over indices `1:n` is *very* common. `n` might be the length of a vector, the number of rows or columns in a matrix or data frame, or the length of a list.
+
+* Common notation: `i` is the variable that holds the current value inside the loop.
+    + If loops are nested, you will often see `j` and `k` used for the inner loops.
+    
 
 Iterate over character vectors
 ===
 incremental: true
 
-You can also iterate over a character vector:
+What we iterate over doesn't have to be numbers `1:n`. You can also iterate over a character vector in R:
 
 ```r
 some_letters <- letters[4:6]
@@ -387,7 +211,7 @@ for(i in some_letters) {
 ```
 
 ```r
-i # the index variable was added to environment
+i # in R, this will exist outside of the loop!
 ```
 
 ```
@@ -395,11 +219,11 @@ i # the index variable was added to environment
 ```
 
 
-seq_along
+seq_along and building messages
 ===
 incremental: true
 
-When you want to loop over something that isn't numeric but want to have a numeric index of where you are in the loop, `seq_along` is useful:
+When you want to loop over something that isn't numeric but want to use a numeric index of where you are in the loop, `seq_along` is useful:
 
 
 ```r
@@ -427,12 +251,27 @@ Pre-allocation
 ===
 incremental: true
 
-Usually in a `for` loop, you aren't printing output, but want to store results from each iteration somewhere. Figure out how you want to store the output (vector, matrix, data frame, list, etc.) and then **pre-allocate** an object of the right size for that (typically with zeroes or missing values as placeholders).
+Usually in a `for` loop, you aren't just printing output, but want to store results from calculations in each iteration somewhere.
+
+To do that, figure out what you want to store, and **pre-allocate** an object of the right size as a placeholder (typically with zeroes or missing values as placeholders).
+
+Examples of what to pre-allocate based on what you store:
+
+* Single numeric value per iteration: `numeric(num_of_iters)`
+* Single character value per iteration: `character(num_of_iters)`
+* Single true/false value per iteration: `logical(num_of_iters)`
+* Numeric vector per iteration: `matrix(NA, nrow = num_of_iters, ncol = length_of_vector)`
+* Some complicated object per iteration: `vector("list", num_of_iters)`
+
+
+Pre-allocation: numeric example
+===
+incremental: true
 
 
 ```r
 # preallocate numeric vector
-iters <- 5
+iters <- 10
 output <- numeric(iters)
 
 for(i in 1:iters) {
@@ -442,197 +281,261 @@ output
 ```
 
 ```
-[1]  1  1  5 13 25
+ [1]   1   1   5  13  25  41  61  85 113 145
 ```
 
 
-Preallocated list: regression models
+setNames
 ===
 incremental: true
 
+The function `setNames` can be handy for pre-allocating a named vector:
+
 
 ```r
-x <- rnorm(30) # making fake data
-fake_data <- data.frame(x = x, y = 2 * x + rnorm(30))
-# model formulas as strings in named vector
-models <- c("int only" = "y ~ 1", "standard" = "y ~ x", "quadratic" = "y ~ x + I(x^2)")
-output <- vector("list", length(models)) # initialize list
-names(output) <- names(models) # give entries good names
-# fit each model to fake_data and store in output
-for(mod in names(models)) {
-    output[[mod]] <- lm(formula(models[mod]),
-                        data = fake_data)
-}
-str(output)
+(names_to_use <- paste0("iter ", letters[1:5]))
 ```
 
 ```
-List of 3
- $ int only :List of 11
-  ..$ coefficients : Named num -0.939
-  .. ..- attr(*, "names")= chr "(Intercept)"
-  ..$ residuals    : Named num [1:30] 1.434 -2.127 -1.469 0.787 1.864 ...
-  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
-  ..$ effects      : Named num [1:30] 5.143 -2.348 -1.69 0.566 1.642 ...
-  .. ..- attr(*, "names")= chr [1:30] "(Intercept)" "" "" "" ...
-  ..$ rank         : int 1
-  ..$ fitted.values: Named num [1:30] -0.939 -0.939 -0.939 -0.939 -0.939 ...
-  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
-  ..$ assign       : int 0
-  ..$ qr           :List of 5
-  .. ..$ qr   : num [1:30, 1] -5.477 0.183 0.183 0.183 0.183 ...
-  .. .. ..- attr(*, "dimnames")=List of 2
-  .. .. .. ..$ : chr [1:30] "1" "2" "3" "4" ...
-  .. .. .. ..$ : chr "(Intercept)"
-  .. .. ..- attr(*, "assign")= int 0
-  .. ..$ qraux: num 1.18
-  .. ..$ pivot: int 1
-  .. ..$ tol  : num 1e-07
-  .. ..$ rank : int 1
-  .. ..- attr(*, "class")= chr "qr"
-  ..$ df.residual  : int 29
-  ..$ call         : language lm(formula = formula(models[mod]), data = fake_data)
-  ..$ terms        :Classes 'terms', 'formula' length 3 y ~ 1
-  .. .. ..- attr(*, "variables")= language list(y)
-  .. .. ..- attr(*, "factors")= int(0) 
-  .. .. ..- attr(*, "term.labels")= chr(0) 
-  .. .. ..- attr(*, "order")= int(0) 
-  .. .. ..- attr(*, "intercept")= int 1
-  .. .. ..- attr(*, "response")= int 1
-  .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
-  .. .. ..- attr(*, "predvars")= language list(y)
-  .. .. ..- attr(*, "dataClasses")= Named chr "numeric"
-  .. .. .. ..- attr(*, "names")= chr "y"
-  ..$ model        :'data.frame':	30 obs. of  1 variable:
-  .. ..$ y: num [1:30] 0.495 -3.065 -2.408 -0.152 0.925 ...
-  .. ..- attr(*, "terms")=Classes 'terms', 'formula' length 3 y ~ 1
-  .. .. .. ..- attr(*, "variables")= language list(y)
-  .. .. .. ..- attr(*, "factors")= int(0) 
-  .. .. .. ..- attr(*, "term.labels")= chr(0) 
-  .. .. .. ..- attr(*, "order")= int(0) 
-  .. .. .. ..- attr(*, "intercept")= int 1
-  .. .. .. ..- attr(*, "response")= int 1
-  .. .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
-  .. .. .. ..- attr(*, "predvars")= language list(y)
-  .. .. .. ..- attr(*, "dataClasses")= Named chr "numeric"
-  .. .. .. .. ..- attr(*, "names")= chr "y"
-  ..- attr(*, "class")= chr "lm"
- $ standard :List of 12
-  ..$ coefficients : Named num [1:2] -0.0901 2.0015
-  .. ..- attr(*, "names")= chr [1:2] "(Intercept)" "x"
-  ..$ residuals    : Named num [1:30] 1.54 -0.977 -0.764 -0.191 -0.906 ...
-  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
-  ..$ effects      : Named num [1:30] 5.143 9.715 -0.925 -0.54 -1.455 ...
-  .. ..- attr(*, "names")= chr [1:30] "(Intercept)" "x" "" "" ...
-  ..$ rank         : int 2
-  ..$ fitted.values: Named num [1:30] -1.0452 -2.0883 -1.6437 0.0389 1.8303 ...
-  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
-  ..$ assign       : int [1:2] 0 1
-  ..$ qr           :List of 5
-  .. ..$ qr   : num [1:30, 1:2] -5.477 0.183 0.183 0.183 0.183 ...
-  .. .. ..- attr(*, "dimnames")=List of 2
-  .. .. .. ..$ : chr [1:30] "1" "2" "3" "4" ...
-  .. .. .. ..$ : chr [1:2] "(Intercept)" "x"
-  .. .. ..- attr(*, "assign")= int [1:2] 0 1
-  .. ..$ qraux: num [1:2] 1.18 1.12
-  .. ..$ pivot: int [1:2] 1 2
-  .. ..$ tol  : num 1e-07
-  .. ..$ rank : int 2
-  .. ..- attr(*, "class")= chr "qr"
-  ..$ df.residual  : int 28
-  ..$ xlevels      : Named list()
-  ..$ call         : language lm(formula = formula(models[mod]), data = fake_data)
-  ..$ terms        :Classes 'terms', 'formula' length 3 y ~ x
-  .. .. ..- attr(*, "variables")= language list(y, x)
-  .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-  .. .. .. ..- attr(*, "dimnames")=List of 2
-  .. .. .. .. ..$ : chr [1:2] "y" "x"
-  .. .. .. .. ..$ : chr "x"
-  .. .. ..- attr(*, "term.labels")= chr "x"
-  .. .. ..- attr(*, "order")= int 1
-  .. .. ..- attr(*, "intercept")= int 1
-  .. .. ..- attr(*, "response")= int 1
-  .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
-  .. .. ..- attr(*, "predvars")= language list(y, x)
-  .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-  .. .. .. ..- attr(*, "names")= chr [1:2] "y" "x"
-  ..$ model        :'data.frame':	30 obs. of  2 variables:
-  .. ..$ y: num [1:30] 0.495 -3.065 -2.408 -0.152 0.925 ...
-  .. ..$ x: num [1:30] -0.4772 -0.9984 -0.7763 0.0645 0.9595 ...
-  .. ..- attr(*, "terms")=Classes 'terms', 'formula' length 3 y ~ x
-  .. .. .. ..- attr(*, "variables")= language list(y, x)
-  .. .. .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-  .. .. .. .. ..- attr(*, "dimnames")=List of 2
-  .. .. .. .. .. ..$ : chr [1:2] "y" "x"
-  .. .. .. .. .. ..$ : chr "x"
-  .. .. .. ..- attr(*, "term.labels")= chr "x"
-  .. .. .. ..- attr(*, "order")= int 1
-  .. .. .. ..- attr(*, "intercept")= int 1
-  .. .. .. ..- attr(*, "response")= int 1
-  .. .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
-  .. .. .. ..- attr(*, "predvars")= language list(y, x)
-  .. .. .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-  .. .. .. .. ..- attr(*, "names")= chr [1:2] "y" "x"
-  ..- attr(*, "class")= chr "lm"
- $ quadratic:List of 12
-  ..$ coefficients : Named num [1:3] -0.0139 2.0047 -0.0775
-  .. ..- attr(*, "names")= chr [1:3] "(Intercept)" "x" "I(x^2)"
-  ..$ residuals    : Named num [1:30] 1.483 -0.973 -0.791 -0.267 -0.914 ...
-  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
-  ..$ effects      : Named num [1:30] 5.143 9.715 -0.564 -0.499 -1.458 ...
-  .. ..- attr(*, "names")= chr [1:30] "(Intercept)" "x" "I(x^2)" "" ...
-  ..$ rank         : int 3
-  ..$ fitted.values: Named num [1:30] -0.988 -2.093 -1.617 0.115 1.838 ...
-  .. ..- attr(*, "names")= chr [1:30] "1" "2" "3" "4" ...
-  ..$ assign       : int [1:3] 0 1 2
-  ..$ qr           :List of 5
-  .. ..$ qr   : num [1:30, 1:3] -5.477 0.183 0.183 0.183 0.183 ...
-  .. .. ..- attr(*, "dimnames")=List of 2
-  .. .. .. ..$ : chr [1:30] "1" "2" "3" "4" ...
-  .. .. .. ..$ : chr [1:3] "(Intercept)" "x" "I(x^2)"
-  .. .. ..- attr(*, "assign")= int [1:3] 0 1 2
-  .. ..$ qraux: num [1:3] 1.18 1.12 1.03
-  .. ..$ pivot: int [1:3] 1 2 3
-  .. ..$ tol  : num 1e-07
-  .. ..$ rank : int 3
-  .. ..- attr(*, "class")= chr "qr"
-  ..$ df.residual  : int 27
-  ..$ xlevels      : Named list()
-  ..$ call         : language lm(formula = formula(models[mod]), data = fake_data)
-  ..$ terms        :Classes 'terms', 'formula' length 3 y ~ x + I(x^2)
-  .. .. ..- attr(*, "variables")= language list(y, x, I(x^2))
-  .. .. ..- attr(*, "factors")= int [1:3, 1:2] 0 1 0 0 0 1
-  .. .. .. ..- attr(*, "dimnames")=List of 2
-  .. .. .. .. ..$ : chr [1:3] "y" "x" "I(x^2)"
-  .. .. .. .. ..$ : chr [1:2] "x" "I(x^2)"
-  .. .. ..- attr(*, "term.labels")= chr [1:2] "x" "I(x^2)"
-  .. .. ..- attr(*, "order")= int [1:2] 1 1
-  .. .. ..- attr(*, "intercept")= int 1
-  .. .. ..- attr(*, "response")= int 1
-  .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
-  .. .. ..- attr(*, "predvars")= language list(y, x, I(x^2))
-  .. .. ..- attr(*, "dataClasses")= Named chr [1:3] "numeric" "numeric" "numeric"
-  .. .. .. ..- attr(*, "names")= chr [1:3] "y" "x" "I(x^2)"
-  ..$ model        :'data.frame':	30 obs. of  3 variables:
-  .. ..$ y     : num [1:30] 0.495 -3.065 -2.408 -0.152 0.925 ...
-  .. ..$ x     : num [1:30] -0.4772 -0.9984 -0.7763 0.0645 0.9595 ...
-  .. ..$ I(x^2):Class 'AsIs'  num [1:30] 0.22771 0.99678 0.60257 0.00415 0.92063 ...
-  .. ..- attr(*, "terms")=Classes 'terms', 'formula' length 3 y ~ x + I(x^2)
-  .. .. .. ..- attr(*, "variables")= language list(y, x, I(x^2))
-  .. .. .. ..- attr(*, "factors")= int [1:3, 1:2] 0 1 0 0 0 1
-  .. .. .. .. ..- attr(*, "dimnames")=List of 2
-  .. .. .. .. .. ..$ : chr [1:3] "y" "x" "I(x^2)"
-  .. .. .. .. .. ..$ : chr [1:2] "x" "I(x^2)"
-  .. .. .. ..- attr(*, "term.labels")= chr [1:2] "x" "I(x^2)"
-  .. .. .. ..- attr(*, "order")= int [1:2] 1 1
-  .. .. .. ..- attr(*, "intercept")= int 1
-  .. .. .. ..- attr(*, "response")= int 1
-  .. .. .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
-  .. .. .. ..- attr(*, "predvars")= language list(y, x, I(x^2))
-  .. .. .. ..- attr(*, "dataClasses")= Named chr [1:3] "numeric" "numeric" "numeric"
-  .. .. .. .. ..- attr(*, "names")= chr [1:3] "y" "x" "I(x^2)"
-  ..- attr(*, "class")= chr "lm"
+[1] "iter a" "iter b" "iter c" "iter d" "iter e"
 ```
+
+```r
+# without setNames:
+a_vector <- numeric(5)
+names(a_vector) <- names_to_use
+
+# with setNames: first arg = values, second = names
+(a_vector <- setNames(numeric(5), names_to_use))
+```
+
+```
+iter a iter b iter c iter d iter e 
+     0      0      0      0      0 
+```
+
+
+Extended regression example
+===
+type: section
+
+
+The premise
+===
+
+Suppose we have some data that we want to try fitting several regression models to. We want to store the results of fitting each regression in a list so that we can compare them. To do this consistently, we'll write a loop. That way no matter if we had 2 models or 200 models, we wouldn't make a typo.
+
+After we do this, we'll try something more advanced with loops: **cross-validating** regressions to get an estimate of their true accuracy in predicting values out-of-sample.
+
+
+Making up data
+===
+incremental: true
+
+Let's simulate some fake data for this using the `rnorm` function to generate random values from a normal distribution.
+
+
+```r
+set.seed(98195)
+# simulating example data:
+n <- 300
+x <- rnorm(n, mean = 5, sd = 4)
+fake_data <- data.frame(x = x, y = -0.5 * x + 0.05 * x^2 + rnorm(n, sd = 1))
+```
+
+Aside: if you followed the scandal in political science last year about a grad student allegedly faking data for a publication in *Science*, [it is believed he used the `rnorm` function](http://stanford.edu/~dbroock/broockman_kalla_aronow_lg_irregularities.pdf) to add noise to an existing dataset to get his values.
+
+
+Plot of fake data
+===
+
+
+```r
+library(ggplot2)
+ggplot(data = fake_data, aes(x = x, y = y)) +
+    geom_point() + ggtitle("Our fake data")
+```
+
+<img src="slides_week_6-figure/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" width="1100px" height="330px" />
+
+
+Candidate regression models
+===
+incremental: true
+
+Let's say we want to consider several different regression models to draw trendlines through these data:
+
+* "Intercept only": draw a horizontal line that best fits the `y` values, i.e. $E[y_i | x_i] = \beta_0$
+* "Linear model": draw a line that best fits the `y` values as a function of `x`, i.e. $E[y_i | x_i] = \beta_0 + \beta_1 \cdot x_i$
+* "Quadratic model": draw a quadratic curve that best summarizes the `y` values as a function of `x`, i.e. $E[y_i | x_i ] = \beta_0 + \beta_1 \cdot x_i + \beta_2 \cdot x_i^2$
+* "Cubic model": draw a cubic curve that best summarizes the `y` values as a function of `x`, i.e. $E[y_i | x_i ] = \beta_0 + \beta_1 \cdot x_i + \beta_2 \cdot x_i^2 + \beta_3 \cdot x_i^3$
+
+
+Preallocating a list for the regression models
+===
+incremental: true
+
+Let's make a named character vector for the formulas we'll use in `lm`:
+
+```r
+models <- c("intercept only" = "y ~ 1",
+            "linear" = "y ~ x",
+            "quadratic" = "y ~ x + I(x^2)",
+            "cubic" = "y ~ x + I(x^2) + I(x^3)")
+```
+
+Then pre-allocate a list to store the fitted models:
+
+```r
+fitted_lms <- vector("list", length(models)) # initialize list
+names(fitted_lms) <- names(models) # give entries good names
+```
+
+Fitting the models in a for loop
+===
+incremental: true
+
+Next, we'll loop over the `models` vector and fit each one, storing it in the appropriate slot. We can go from a character string describing a model to a formula using the `formula` function:
+
+```r
+for(mod in names(models)) {
+    fitted_lms[[mod]] <- lm(formula(models[mod]), data = fake_data)
+}
+```
+
+
+Getting predictions from fitted models
+===
+
+To plot the fitted models, we can first get predicted `y` values from each at the `x` values in our data. 
+
+
+```r
+# initialize data frame to hold predictions
+predicted_data <- fake_data
+for(mod in names(models)) {
+    # make a new column in predicted data for each model's predictions
+    predicted_data[[mod]] <- predict(fitted_lms[[mod]],
+                                newdata = predicted_data)
+}
+```
+
+
+Gathering predictions
+===
+
+Use `tidyr::gather` to make the predictions tidy, and set the levels of the `Model` variable.
+
+
+```r
+library(tidyr)
+library(dplyr)
+tidy_predicted_data <- predicted_data %>%
+    gather(Model, Prediction, -x, -y) %>%
+    mutate(Model = factor(Model, levels = names(models)))
+```
+
+Plotting predictions
+===
+
+We'll use `ggplot2` to plot these tidied up predictions. For the first time, you'll see us use multiple data sets on the same plot: look at the `geom_line` call.
+
+```r
+ggplot(data = fake_data, aes(x = x, y = y)) +
+    geom_point() +
+    geom_line(data = tidy_predicted_data,
+              aes(x = x, y = Prediction,
+                  group = Model, color = Model),
+              alpha = 0.5, size = 2) +
+    ggtitle("Predicted trends from regression") +
+    theme_bw()
+```
+
+Plotted predictions
+===
+
+<img src="slides_week_6-figure/unnamed-chunk-18-1.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" width="1100px" height="500px" />
+
+Which looks best to you?
+
+
+Cross validation: what is it?
+===
+incremental: true
+
+**Cross validation** is a widely-used way to estimate how accurately a model makes predictions on unseen data (data not used in fitting the model). The procedure:
+
+* Split your data into $K$ **folds** (disjoint pieces)
+* For each fold $i = 1, \ldots, K$:
+    + Fit the model to all the data except that in fold $i$
+    + Make predictions for the held-out data in fold $i$
+* Calculate the mean squared error (or your favorite measure of accuracy comparing predictions to actuals): $\text{MSE} = \frac{1}{n} \sum_{i=1}^n (\text{actual } y_i - \text{predicted } y_i)^2$
+
+A model that fits well will have low mean squared error. Models that are either too simple or too complicated will tend to make bad predictions and have high mean squared error.
+
+
+Pre-allocating for CV
+===
+
+Let's split the data into $K=10$ folds. We'll make a new data frame to hold the data and sampled fold numbers that we will add predictions onto later. We'll get the folds by using the `sample` function without replcement on a vector as long as our data that has the numbers 1 through $K$ repeated:
+
+```r
+K <- 10
+CV_predictions <- fake_data
+CV_predictions$fold <- sample(rep(1:K, length.out = nrow(CV_predictions)), replace = FALSE)
+CV_predictions[, names(models)] <- NA
+head(CV_predictions, 2)
+```
+
+```
+      x      y fold intercept only linear quadratic cubic
+1  1.41  0.830   10             NA     NA        NA    NA
+2 10.76 -0.125    3             NA     NA        NA    NA
+```
+
+Double-looping for CV
+===
+
+Next, let's loop over models, and within each model, loop over folds to fit the model and make predictions:
+
+
+```r
+for(mod in names(models)) {
+    for(k in 1:K) {
+        # TRUE/FALSE vector of rows in the fold
+        fold_rows <- (CV_predictions$fold == k)
+        # fit model to data not in fold
+        temp_mod <- lm(formula(models[mod]),
+                       data = CV_predictions[!fold_rows, ])
+        # predict on data in fold
+        CV_predictions[fold_rows, mod] <- predict(temp_mod, newdata = CV_predictions[fold_rows, ])
+    }
+}
+```
+
+
+Which did best?
+===
+incremental: true
+
+Let's write another loop to compute the mean squared error of these CV predictions:
+
+
+```r
+CV_MSE <- setNames(numeric(length(models)), names(models))
+for(mod in names(models)) {
+    pred_sq_error <- (CV_predictions$y - CV_predictions[[mod]])^2
+    CV_MSE[mod] <- mean(pred_sq_error)
+}
+CV_MSE
+```
+
+```
+intercept only         linear      quadratic          cubic 
+          2.18           2.15           1.05           1.06 
+```
+
+Based on these results, which model would you choose?
 
 
 Conditional flow
@@ -643,7 +546,7 @@ if, else
 ===
 type: incremental
 
-You've seen `ifelse` before for logical checks on a whole vector. For checking whether a single logical statement holds and then conditionally executing a set of actions, use `if()` and `else`:
+You've seen `ifelse` before for logical checks on a whole vector. For checking whether a *single* logical statement holds and then conditionally executing a set of actions, use `if()` and `else`:
 
 
 ```r
@@ -680,11 +583,46 @@ incremental: true
 ```
 
 
-while loops
+Handling special cases
 ===
 incremental: true
 
-Another looping structure is the `while` loop. Rather than iterating over a predefined vector, the loop keeps going until some condition is no longer true.
+Aside from the previous toy example, `if` statements are useful when you have to handle special cases. For your homework, you will learn about some very special cases on a journey into...
+
+**data hell!**
+
+![Mad Meg fighting at the gates of data hell](https://upload.wikimedia.org/wikipedia/en/d/db/Bruegel-Mad_Meg-thumb.jpg)
+
+[California Office of Statewide Health Planning and Development Hospital Quarterly Financial and Utilization Data Files](http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/CmpleteData/default.asp)
+
+
+Data prep sketch outline
+===
+incremental: true
+
+- Pre-allocate a list for the individual files
+- Inside a `for` loop:
+    + Make a URL and download file 
+    + Read the file in with Excel-reading package and store in list
+- Combine the data for each year into one file
+- Clean up the combined data
+- Some variations on general process you might encounter:
+    + Unzip files first (`unzip`)
+    + Use `if` logic to clean up data differently depending on file
+- **HOMEWORK**: read the [extended writeup on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html).
+
+
+
+while loops
+===
+type: section
+
+
+while
+===
+incremental: true
+
+A lesser-used looping structure is the `while` loop. Rather than iterating over a predefined vector, the loop keeps going until some condition is no longer true.
 
 
 ```r
@@ -701,44 +639,13 @@ num_flips # follows negative binomial distribution
 [1] 7
 ```
 
-
-Difficult real-world example
-===
-type: section
-
-Importing many files
-===
-
-Let us journey into...**data hell!**
-
-![Garden of Earthly Delights](https://upload.wikimedia.org/wikipedia/commons/f/f6/Mad_meg.jpg)
-
-[California Office of Statewide Health Planning and Development Hospital Quarterly Financial and Utilization Data Files](http://oshpd.ca.gov/hid/Products/Hospitals/QuatrlyFinanData/CmpleteData/default.asp)
-
-
-Data prep sketch outline
-===
-incremental: true
-
-- Pre-allocate a list for the individual files
-- Inside a `for` loop `seq_along`ing the file names:
-    + Make a URL and download file 
-    + Read the file in with Excel-reading package and store in list
-- Use `dplyr::bind_rows` to combine all tables into one
-- Remove the list to save memory
-- Clean up the combined data
-- Some variations on general process you might encounter:
-    + Unzip files first (`unzip`)
-    + Use `if` logic to clean up data differently depending on file
-- **HOMEWORK**: read the [extended writeup on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html).
-
-
 Vectorization
 ===
 type: section
 
 Non-vectorized example
 ===
+incremental: true
 
 We have a vector of numbers, and we want to add 1 to each element.
 
@@ -746,7 +653,7 @@ We have a vector of numbers, and we want to add 1 to each element.
 my_vector <- rnorm(100000)
 ```
 
-A `for` loop approach works but is slow:
+A `for` loop works but is super slow:
 
 ```r
 for_start <- proc.time() # start the clock
@@ -759,12 +666,13 @@ for(position in 1:length(my_vector)) {
 
 ```
    user  system elapsed 
-  0.217   0.013   0.292 
+  0.226   0.006   0.389 
 ```
 
 
 Vectorization wins
 ===
+incremental: true
 
 Recognize that we can instead use R's vector addition (with recycling):
 
@@ -776,7 +684,7 @@ new_vector <- my_vector + 1
 
 ```
    user  system elapsed 
-  0.004   0.001   0.005 
+  0.003   0.000   0.004 
 ```
 
 ```r
@@ -785,7 +693,7 @@ for_time / vec_time
 
 ```
    user  system elapsed 
-  54.25   13.00   58.40 
+   75.3     Inf    97.3 
 ```
 
 Vector/matrix arithmetic is implemented using fast, optimized functions that a `for` loop can't compete with.
@@ -849,4 +757,4 @@ type: section
 
 Read the [data downloading demonstration on the course page](https://rebeccaferrell.github.io/Lectures/data_download_demo.html). I hope that your forays into automated data downloading and cleaning are smoother than this one was!
 
-Reminder that HW 5 assigned last week is still due next week.
+Reminder: HW 5 assigned last week is due next week and worth double points.
