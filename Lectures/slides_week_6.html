@@ -825,7 +825,7 @@ c(mean1, mean2 mean3, mean4, mean5, man6)
 
 <p class="fragment">Can you spot the problems?</p>
 
-<p class="fragment">How angry would Gallant be if the <code>swiss</code> data had 200 columns instead of 6?</p>
+<p class="fragment">How angry would Goofus be if the <code>swiss</code> data had 200 columns instead of 6?</p>
 
 </div>
 
@@ -854,7 +854,7 @@ swiss_means
 <section data-transition="default" data-transition-speed="default">
 <h3>Don&#x27;t Repeat Yourself (DRY)!</h3>
 <div class="mediaInline slideContent" >
-<p><img src="http://3.bp.blogspot.com/-8i111TS2ZuM/UVTuwSOFSEI/AAAAAAAAOn0/j5pSrEpJPXI/s1600/womens+deodorant.jpg" alt="&quot;never let them see you sweat&quot;"/></p>
+<p><img src="https://c1.q-assets.com/images/products/p/adc/adc-146b_1z.jpg" alt="&quot;never let them see you sweat&quot;"/></p>
 
 <p>The <strong>DRY</strong> idea: computers are much better at doing the same thing over and over again than we are. Writing code to repeat tasks for us prevents Goofus goofs.</p>
 
@@ -1296,8 +1296,8 @@ head(CV_predictions, 2)
 </code></pre>
 
 <pre><code>      x      y fold intercept only linear quadratic cubic
-1  1.41  0.830   10             NA     NA        NA    NA
-2 10.76 -0.125    3             NA     NA        NA    NA
+1  1.41  0.830    3             NA     NA        NA    NA
+2 10.76 -0.125    5             NA     NA        NA    NA
 </code></pre>
 
 </div>
@@ -1338,7 +1338,7 @@ CV_MSE
 </code></pre>
 
 <pre class="fragment"><code>intercept only         linear      quadratic          cubic 
-          2.18           2.15           1.05           1.06 
+          2.18           2.15           1.07           1.08 
 </code></pre>
 
 <p class="fragment">Based on these results, which model would you choose?</p>
@@ -1452,7 +1452,7 @@ while(num_heads &lt; 4) {
 num_flips # follows negative binomial distribution
 </code></pre>
 
-<pre class="fragment"><code>[1] 7
+<pre class="fragment"><code>[1] 6
 </code></pre>
 
 </div>
@@ -1484,7 +1484,7 @@ for(position in 1:length(my_vector)) {
 </code></pre>
 
 <pre class="fragment"><code>   user  system elapsed 
-  0.226   0.006   0.389 
+  0.204   0.003   0.207 
 </code></pre>
 
 </div>
@@ -1501,14 +1501,14 @@ new_vector &lt;- my_vector + 1
 </code></pre>
 
 <pre class="fragment"><code>   user  system elapsed 
-  0.003   0.000   0.004 
+  0.003   0.001   0.004 
 </code></pre>
 
 <pre class="fragment"><code class="r">for_time / vec_time
 </code></pre>
 
 <pre class="fragment"><code>   user  system elapsed 
-   75.3     Inf    97.3 
+   68.0     3.0    51.8 
 </code></pre>
 
 <p class="fragment">Vector/matrix arithmetic is implemented using fast, optimized functions that a <code>for</code> loop can&#39;t compete with.</p>
