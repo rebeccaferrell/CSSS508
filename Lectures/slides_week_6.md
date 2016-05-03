@@ -32,7 +32,7 @@ c(mean1, mean2 mean3, mean4, mean5, man6)
 
 Can you spot the problems?
 
-How angry would Gallant be if the `swiss` data had 200 columns instead of 6?
+How angry would Goofus be if the `swiss` data had 200 columns instead of 6?
 
 
 Gallant
@@ -62,7 +62,7 @@ swiss_means
 Don't Repeat Yourself (DRY)!
 ===
 
-!["never let them see you sweat"](http://3.bp.blogspot.com/-8i111TS2ZuM/UVTuwSOFSEI/AAAAAAAAOn0/j5pSrEpJPXI/s1600/womens+deodorant.jpg)
+!["never let them see you sweat"](https://c1.q-assets.com/images/products/p/adc/adc-146b_1z.jpg)
 
 The **DRY** idea: computers are much better at doing the same thing over and over again than we are. Writing code to repeat tasks for us prevents Goofus goofs.
 
@@ -489,8 +489,8 @@ head(CV_predictions, 2)
 
 ```
       x      y fold intercept only linear quadratic cubic
-1  1.41  0.830   10             NA     NA        NA    NA
-2 10.76 -0.125    3             NA     NA        NA    NA
+1  1.41  0.830    3             NA     NA        NA    NA
+2 10.76 -0.125    5             NA     NA        NA    NA
 ```
 
 Double-looping for CV
@@ -532,7 +532,7 @@ CV_MSE
 
 ```
 intercept only         linear      quadratic          cubic 
-          2.18           2.15           1.05           1.06 
+          2.18           2.15           1.07           1.08 
 ```
 
 Based on these results, which model would you choose?
@@ -636,7 +636,7 @@ num_flips # follows negative binomial distribution
 ```
 
 ```
-[1] 7
+[1] 6
 ```
 
 Vectorization
@@ -666,7 +666,7 @@ for(position in 1:length(my_vector)) {
 
 ```
    user  system elapsed 
-  0.226   0.006   0.389 
+  0.204   0.003   0.207 
 ```
 
 
@@ -684,7 +684,7 @@ new_vector <- my_vector + 1
 
 ```
    user  system elapsed 
-  0.003   0.000   0.004 
+  0.003   0.001   0.004 
 ```
 
 ```r
@@ -693,7 +693,7 @@ for_time / vec_time
 
 ```
    user  system elapsed 
-   75.3     Inf    97.3 
+   68.0     3.0    51.8 
 ```
 
 Vector/matrix arithmetic is implemented using fast, optimized functions that a `for` loop can't compete with.

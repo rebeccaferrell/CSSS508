@@ -31,7 +31,7 @@ c(mean1, mean2 mean3, mean4, mean5, man6)
 
 Can you spot the problems?
 
-How angry would Gallant be if the `swiss` data had 200 columns instead of `r ncol(swiss)`?
+How angry would Goofus be if the `swiss` data had 200 columns instead of `r ncol(swiss)`?
 
 
 Gallant
@@ -55,7 +55,7 @@ swiss_means
 Don't Repeat Yourself (DRY)!
 ===
 
-!["never let them see you sweat"](http://3.bp.blogspot.com/-8i111TS2ZuM/UVTuwSOFSEI/AAAAAAAAOn0/j5pSrEpJPXI/s1600/womens+deodorant.jpg)
+!["never let them see you sweat"](https://c1.q-assets.com/images/products/p/adc/adc-146b_1z.jpg)
 
 The **DRY** idea: computers are much better at doing the same thing over and over again than we are. Writing code to repeat tasks for us prevents Goofus goofs.
 

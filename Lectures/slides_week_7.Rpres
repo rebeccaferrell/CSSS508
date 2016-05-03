@@ -24,10 +24,10 @@ incremental: true
     + Input: a data frame, logical conditions
     + Output: a data frame with rows removed using those conditions
 * `c`:
-    + Input: a bunch of numbers or characters
+    + Input: a bunch of numbers or characters, vectors
     + Output: the inputs combined into a vector
 * `readr::read_csv`:
-    + Input: file path, optional things like variables names and types
+    + Input: file path, optionally variable names and types
     + Output: data frame containing info converted from file
 
 
