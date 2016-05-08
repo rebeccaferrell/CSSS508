@@ -35,7 +35,7 @@ for(position in 1:length(my_vector)) {
 
 ```
    user  system elapsed 
-  2.055   0.040   2.146 
+  2.057   0.039   2.180 
 ```
 
 
@@ -53,7 +53,7 @@ new_vector <- my_vector + 1
 
 ```
    user  system elapsed 
-  0.060   0.008   0.067 
+  0.057   0.007   0.064 
 ```
 
 ```r
@@ -61,8 +61,8 @@ for_time / vec_time
 ```
 
 ```
-    user   system  elapsed 
-34.25000  5.00000 32.02985 
+     user    system   elapsed 
+36.087719  5.571429 34.062500 
 ```
 
 Vector/matrix arithmetic is implemented using fast, optimized functions that a `for` loop can't compete with.
@@ -344,10 +344,10 @@ quantile_report(rnorm(10000))
 ```
 
 ```
-  Bottom 1%   Bottom 5%  Bottom 10%  Bottom 25%      Median     Top 25% 
--2.25847948 -1.64396367 -1.26526868 -0.67515473  0.00667206  0.69270116 
-    Top 10%      Top 5%      Top 1% 
- 1.30913774  1.65679599  2.25174944 
+   Bottom 1%    Bottom 5%   Bottom 10%   Bottom 25%       Median 
+-2.335569889 -1.660062418 -1.275845494 -0.688747891 -0.007850475 
+     Top 25%      Top 10%       Top 5%       Top 1% 
+ 0.675108750  1.280428326  1.647617563  2.331385793 
 ```
 
 
@@ -804,4 +804,8 @@ type: section
 Homework
 ===
 
-DUE IN TWO WEEKS
+DUE IN TWO WEEKS: download and analyze data from the first year of Seattle's Pronto! bike sharing program.
+
+You'll be writing a loop to read in the data, functions to clean it up, and another function to visualize ridership over the first year.
+
+There is some string processing needed, much of which you have already seen or can probably Google, but some will come in next week's lecture.

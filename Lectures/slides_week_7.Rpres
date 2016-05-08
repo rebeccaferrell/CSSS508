@@ -539,4 +539,8 @@ type: section
 Homework
 ===
 
-DUE IN TWO WEEKS
+DUE IN TWO WEEKS: download and analyze data from the first year of Seattle's Pronto! bike sharing program.
+
+You'll be writing a loop to read in the data, functions to clean it up, and another function to visualize ridership over the first year.
+
+There is some string processing needed, much of which you have already seen or can probably Google, but some will come in next week's lecture.
