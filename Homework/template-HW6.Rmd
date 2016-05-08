@@ -1,0 +1,15 @@
+---
+title: "HW 6: Functions and loops"
+author: "YOUR NAME"
+date: "May 18, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+write a for loop to import data from my github
+write functions to clean data with weird values
+write functions to summarize it in particular ways
+write a function to make a standardized ggplot

@@ -666,7 +666,7 @@ for(position in 1:length(my_vector)) {
 
 ```
    user  system elapsed 
-  0.204   0.003   0.207 
+  0.217   0.005   0.234 
 ```
 
 
@@ -684,7 +684,7 @@ new_vector <- my_vector + 1
 
 ```
    user  system elapsed 
-  0.003   0.001   0.004 
+  0.004   0.001   0.004 
 ```
 
 ```r
@@ -693,7 +693,7 @@ for_time / vec_time
 
 ```
    user  system elapsed 
-   68.0     3.0    51.8 
+   54.3     5.0    58.5 
 ```
 
 Vector/matrix arithmetic is implemented using fast, optimized functions that a `for` loop can't compete with.
