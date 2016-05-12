@@ -62,11 +62,11 @@ You may be familiar with `substr` now from the voting homework. We can use it to
 ```r
 restaurants <- restaurants %>%
     mutate(ZIP_5 = substr(ZIP, 1, 5))
-head(restaurants$ZIP_5)
+head(unique(restaurants$ZIP_5))
 ```
 
 ```
-[1] "98109" "98109" "98109" "98109" "98109" "98109"
+[1] "98109" "98101" "98102" "98122" "98133" "98188"
 ```
 
 
@@ -79,17 +79,17 @@ We can combine parts of strings together using the `paste` function, e.g. to mak
 
 ```r
 restaurants <- restaurants %>%
-    mutate(mailing_address = paste(Address, "\n", # new line character
-                                   City, ", WA ", ZIP_5,
-                                   sep = "" # smush together
-    ))
-head(restaurants$mailing_address)
+    mutate(mailing_address = paste(Address, ", ", City, ", WA ", ZIP_5, sep = ""))
+head(unique(restaurants$mailing_address))
 ```
 
 ```
-[1] "10 MERCER ST\nSeattle, WA 98109" "10 MERCER ST\nSeattle, WA 98109"
-[3] "10 MERCER ST\nSeattle, WA 98109" "10 MERCER ST\nSeattle, WA 98109"
-[5] "10 MERCER ST\nSeattle, WA 98109" "10 MERCER ST\nSeattle, WA 98109"
+[1] "10 MERCER ST, Seattle, WA 98109"      
+[2] "1225 1ST AVE, SEATTLE, WA 98101"      
+[3] "121 11TH AVE E, SEATTLE, WA 98102"    
+[4] "1132 23RD AVE, SEATTLE, WA 98122"     
+[5] "12255 AURORA AVE N, Seattle, WA 98133"
+[6] "722 E PIKE ST, SEATTLE, WA 98122"     
 ```
 
 paste with collapse
@@ -281,11 +281,11 @@ head(restaurants$City)
 ```r
 restaurants <- restaurants %>%
     mutate_each(funs(str_to_upper), Name, Address, City)
-head(restaurants$City)
+head(unique(restaurants$City))
 ```
 
 ```
-[1] "SEATTLE" "SEATTLE" "SEATTLE" "SEATTLE" "SEATTLE" "SEATTLE"
+[1] "SEATTLE"
 ```
 
 Whitespace
@@ -323,14 +323,15 @@ Then we can use the `str_trim` function in `stringr` to clean them up all at onc
 # use mutate_each_ to trim all the character columns
 restaurants <- restaurants %>%
     mutate_each_(funs(str_trim), char_columns)
-head(restaurants$Name, 10)
+head(unique(restaurants$Name), 10)
 ```
 
 ```
- [1] "10 MERCER RESTAURANT" "10 MERCER RESTAURANT" "10 MERCER RESTAURANT"
- [4] "10 MERCER RESTAURANT" "10 MERCER RESTAURANT" "10 MERCER RESTAURANT"
- [7] "10 MERCER RESTAURANT" "10 MERCER RESTAURANT" "10 MERCER RESTAURANT"
-[10] "10 MERCER RESTAURANT"
+ [1] "10 MERCER RESTAURANT"   "1000 SPIRITS"          
+ [3] "11TH AVENUE INN"        "1ST CUP CAFFE"         
+ [5] "125TH ST GRILL"         "95 SLIDE"              
+ [7] "12TH AVE CAFFE"         "13 COINS"              
+ [9] "14 CARROT CAFE"         "15TH AVE BAKERY & CAFE"
 ```
 
 
@@ -345,19 +346,17 @@ incremental: true
 
 **Regular expressions** or **regex**es are how we describe patterns we are looking for in text in a way that a computer can understand. We write an **expression**, apply it to a string input, and then can do things with **matches** we find.
 
-* **Literal characters** are firm snippets to search for like `SEA` or `206`
+* **Literal characters** are defined snippets to search for like `SEA` or `206`
 * **Metacharacters** let us be flexible in describing patterns:
-    + backslash `\`, caret `^`, dollar sign `$`, period `.`, pipe `|`, question mark `?`, asterisk `*`, plus sign `+`, parentheses `(` and `)`, the closing parenthesis ), square brackets `[` and `]`, opening curly brace `{`
-    + To treat a metacharacter as a literal character, need to **escape** it with two preceding backslashs `\\`, e.g. to match `(206)`, you'd use `\\(206\\)` in your regex
+    + backslash `\`, caret `^`, dollar sign `$`, period `.`, pipe `|`, question mark `?`, asterisk `*`, plus sign `+`, parentheses `(` and `)`, square brackets `[` and `]`, curly braces `{` and `}`
+    + To treat a metacharacter as a literal character, need to **escape** it with two preceding backslashs `\\`, e.g. to match `(206)` including the parentheses, you'd use `\\(206\\)` in your regex
 
 
 Simple regex searches with str_detect
 ===
 incremental: true
 
-I want to get inspections for coffee shops. I'll say a coffee shop is anything that has "COFFEE", "ESPRESSO", or "ROASTER" in the name. The regex for this is `COFFEE|ESPRESSO|ROASTER`.
-
-I'll use the `str_detect` function, which returns `TRUE` if it finds what you're looking for and `FALSE` if it doesn't
+I want to get inspections for coffee shops. I'll say a coffee shop is anything that has "COFFEE", "ESPRESSO", or "ROASTER" in the name. The regex for this is `COFFEE|ESPRESSO|ROASTER` because `|` is a metacharacter that means "OR". Use the `str_detect` function, which returns `TRUE` if it finds what you're looking for and `FALSE` if it doesn't:
 
 
 ```r
@@ -373,6 +372,20 @@ head(unique(coffee$Name))
 [5] "ANALOG COFFEE"                      
 [6] "ATELIER COFFEE COMPANY, LTD"        
 ```
+
+Is your coffee SAFE???
+===
+incremental: true
+
+Let's take each unique business identifier, keep the most recent inspection score, and look at a histogram of scores:
+
+
+```r
+recent_coffee_scores <- coffee %>% select(Business_ID, Name, Score, Date) %>% group_by(Business_ID) %>% filter(Date == max(Date)) %>% distinct()
+hist(recent_coffee_scores$Score, xlab = "Most recent inspection score", main = "Most recent inspection scores\nfor Seattle coffee shops")
+```
+
+<img src="slides_week_8-figure/coffee_histogram-1.png" title="plot of chunk coffee_histogram" alt="plot of chunk coffee_histogram" width="1100px" height="330px" />
 
 
 Looking for patterns with str_detect
@@ -392,9 +405,10 @@ str_detect(phone_test_examples, area_code_206_pattern)
 [1]  TRUE  TRUE  TRUE FALSE
 ```
 
-* `^` is a metacharacter meaning "look only the *beginning* of the string"
+* `^` is a metacharacter meaning "look only at the *beginning* of the string"
 * `\\(?` means look for a left parenthesis (`\\(`), but it's optional (`?`)
-* `206` is the literal character to look for
+* `206` is the literal character to look for after the optional parenthesis
+
 
 How many rows have non-206 numbers?
 ===
@@ -434,9 +448,9 @@ str_extract(direction_test_examples, direction_pattern)
 [1] " W"   " NW " NA     NA    
 ```
 
-* ` ` will match a space coming before it
-* `(N|NW|NE|S|SW|SE|W|E)` will match one of the directions in the set
-* `( |$)` says either there is a space after, or it's the end of the address string (`$` means the end of the string)
+* The first space will match a space character, then
+* `(N|NW|NE|S|SW|SE|W|E)` matches one of the directions in the group
+* `( |$)` is a group saying either there is a space after, or it's the end of the address string (`$` means the end of the string)
 
 
 Where in the city are the addresses?
@@ -445,7 +459,7 @@ incremental: true
 
 
 ```r
-restaurants %>% mutate(city_region = str_trim(str_extract(Address, direction_pattern))) %>% group_by(city_region) %>% tally()
+restaurants %>% mutate(city_region = str_trim(str_extract(Address, direction_pattern))) %>% group_by(city_region) %>% tally() %>% arrange(desc(n))
 ```
 
 ```
@@ -453,14 +467,14 @@ Source: local data frame [8 x 2]
 
   city_region     n
         (chr) (int)
-1           E  5967
-2           N  8299
+1           S 17408
+2          NA 14439
 3          NE  9832
-4          NW  4516
-5           S 17408
+4           N  8299
+5           E  5967
 6          SW  5835
-7           W  2160
-8          NA 14439
+7          NW  4516
+8           W  2160
 ```
 
 
@@ -487,38 +501,41 @@ How does the building number regex work?
 
 Let's break down `"^[0-9]*-?[A-Z]? (1/2 )?"`:
 
-* `^[0-9]` means look for a digit between 0 and 9 (`[0-9]`) at the beginning of the string (`^`)
+* `^[0-9]` means look for a digit between 0 and 9 (`[0-9]`) at the beginning (`^`)
 * `*` means potentially match more digits after that
 * `-?` means optionally (`?`) match a hyphen (`-`)
-* `[A-Z]?` means optionally match (`?`) a letter (`A-Z`)
-* ` ` matches a space (` `)
-* `(1/2 )?` optionally matches a 1/2 followed by a space
+* `[A-Z]?` means optionally match (`?`) a letter (`[A-Z]`)
+* Then we match a space (` `)
+* `(1/2 )?` optionally matches a 1/2 followed by a space since this is apparently a thing with some address numbers
 
 
-Replacing the street numbers
+Replacing the street numbers with...nothing
 ===
 incremental: true
 
 
 ```r
 restaurants <- restaurants %>% mutate(street_only = str_replace(Address, address_number_pattern, replacement = ""))
-head(unique(restaurants$street_only))
+head(unique(restaurants$street_only), 12)
 ```
 
 ```
-[1] "MERCER ST"    "1ST AVE"      "11TH AVE E"   "23RD AVE"    
-[5] "AURORA AVE N" "E PIKE ST"   
+ [1] "MERCER ST"         "1ST AVE"           "11TH AVE E"       
+ [4] "23RD AVE"          "AURORA AVE N"      "E PIKE ST"        
+ [7] "E ALDER ST"        "BOREN AVE N"       "PACIFIC HWY S"    
+[10] "EASTLAKE AVE E"    "15TH AVE SW STE A" "3RD AVE"          
 ```
+
 
 Can we remove units/suites too?
 ===
 incremental: true
 
-Getting rid of unit/suite references is tricky, but a decent attempt would be to drop anything including and after "#", "STE", "SUITE", "FL", "SHOP", "UNIT":
+Getting rid of unit/suite references is tricky, but a decent attempt would be to drop anything including and after "#", "STE", "SUITE", "SHOP", "UNIT":
 
 
 ```r
-address_unit_pattern <- " (#|STE|SUITE|FL|SHOP|UNIT).*$"
+address_unit_pattern <- " (#|STE|SUITE|SHOP|UNIT).*$"
 address_unit_test_examples <- c("1ST AVE", "RAINIER AVE S #A", "FAUNTLEROY WAY SW STE 108", "4TH AVE #100C", "NW 54TH ST")
 str_replace(address_unit_test_examples, address_unit_pattern, replacement = "")
 ```
@@ -532,10 +549,10 @@ How'd the unit regex work?
 ===
 incremental: true
 
-Breaking down ` (|#|STE|SUITE|FL|SHOP|UNIT).*`:
+Breaking down ` (|#|STE|SUITE|SHOP|UNIT).*`:
 
-* ` ` matches a space
-* `(#|STE|SUITE|FL|SHOP|UNIT)` matches one of those words
+* First we match a space
+* `(#|STE|SUITE|SHOP|UNIT)` matches one of those words
 * `.*$` matches *any* character (`.`) after those words, zero or more times (`*`), until the end of the string (`$`)
 
 
@@ -546,13 +563,15 @@ incremental: true
 
 ```r
 restaurants <- restaurants %>% mutate(street_only = str_trim(str_replace(street_only, address_unit_pattern, replacement = "")))
-head(unique(restaurants$street_only), 10)
+head(unique(restaurants$street_only), 15)
 ```
 
 ```
- [1] "MERCER ST"      "1ST AVE"        "11TH AVE E"     "23RD AVE"      
- [5] "AURORA AVE N"   "E PIKE ST"      "E ALDER ST"     "BOREN AVE N"   
- [9] "PACIFIC HWY S"  "EASTLAKE AVE E"
+ [1] "MERCER ST"        "1ST AVE"          "11TH AVE E"      
+ [4] "23RD AVE"         "AURORA AVE N"     "E PIKE ST"       
+ [7] "E ALDER ST"       "BOREN AVE N"      "PACIFIC HWY S"   
+[10] "EASTLAKE AVE E"   "15TH AVE SW"      "3RD AVE"         
+[13] "E CHERRY ST"      "GLENDALE WAY S"   "LAKE CITY WAY NE"
 ```
 
 
@@ -563,7 +582,7 @@ incremental: true
 Let's get one row per restaurant per date with the score, and see which streets the ones above 45 are on:
 
 ```r
-restaurants %>% select(Name, Date, Score, street_only) %>% distinct() %>% filter(Score > 45) %>% group_by(street_only) %>% tally() %>% arrange(desc(n))
+restaurants %>% select(Business_ID, Name, Date, Score, street_only) %>% distinct() %>% filter(Score > 45) %>% group_by(street_only) %>% tally() %>% arrange(desc(n))
 ```
 
 ```
@@ -583,6 +602,7 @@ Source: local data frame [231 x 2]
 10          12TH AVE    21
 ..               ...   ...
 ```
+
 
 Splitting up strings
 ===
@@ -611,3 +631,11 @@ head(str_split_fixed(restaurants$Violation_description, " - ", n = 2))
 [5,] "Wiping cloths properly used, stored, proper sanitizer"           
 [6,] "Proper cold holding temperatures ( 42 degrees F to 45 degrees F)"
 ```
+
+
+Next week
+===
+
+Now that we know how to pattern match and process character data, next week we can talk about text analysis in R.
+
+Homework 6 assigned last week will be due next week.
