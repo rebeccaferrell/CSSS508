@@ -7,14 +7,22 @@ width: 1100
 height: 750
 
 
-Rcurl
+Today
 ===
 
-APIs
+* Visualizing spatial data
+* Lab: visualizing food safety over space and time
+    + Optional bonus statistical method: longitudinal Poisson regression
+
+Topics
 ===
 
-JSON
-===
+More of a self-guided lab for second to last week. Downloading, importing, cleaning up, visualizing a longitudinal dataset: the food safety one but with more variables added back in so they can also make spatial ggmap plots. Optionally they can try to fit a multilevel Poisson regression model? Maybe make a variable for lagged previous inspection score.
 
-twitteR
-===
+* More on simulating data
+* Multilevel modeling
+    + What are the assumptions?
+    + Using `lmer`
+    + Comparing subject-specific trajectories - maybe 538-ish partial pooling example?
+* t-tests
+* ANOVA

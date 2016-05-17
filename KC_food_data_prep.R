@@ -26,6 +26,7 @@ rest_seattle <- rest_raw %>%
 
 # add random whitespace to like 10% of business names
 rest_seattle_whitespace <- rest_seattle %>%
+    arrange(Business_ID, `Inspection Date`, `Violation Description`) %>%
     mutate(Name = str_pad(Name,
                           width = rbinom(nrow(rest_seattle),
                                          size = 5, prob = 0.05) +
@@ -41,6 +42,7 @@ rest_seattle_whitespace <- rest_seattle %>%
 seattle_restaurant_inspections <- rest_seattle_whitespace %>%
     select(Name, Date = `Inspection Date`, Description,
            Address, City, ZIP = `Zip Code`, Phone,
+           Longitude, Latitude,
            Type = `Inspection Type`,
            Score = `Inspection Score`, Result = `Inspection Result`,
            Closure = `Inspection Closed Business`,
