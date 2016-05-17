@@ -16,7 +16,7 @@ We'll use data on food safety inspections in King County from [data.kingcounty.g
 ```r
 # getwd()
 library(readr)
-download.file(url = "https://www.dropbox.com/s/ptm1xe43fatpl28/seattle_restaurant_inspections.Rds?raw=1", destfile = "seattle_restaurant_inspections.Rds")
+# download.file(url = "https://www.dropbox.com/s/ptm1xe43fatpl28/seattle_restaurant_inspections.Rds?raw=1", destfile = "seattle_restaurant_inspections.Rds")
 restaurants <- read_rds("seattle_restaurant_inspections.Rds")
 ```
 
@@ -459,7 +459,7 @@ incremental: true
 
 
 ```r
-restaurants %>% mutate(city_region = str_trim(str_extract(Address, direction_pattern))) %>% group_by(city_region) %>% tally() %>% arrange(desc(n))
+restaurants %>% distinct(Address) %>% mutate(city_region = str_trim(str_extract(Address, direction_pattern))) %>% group_by(city_region) %>% tally() %>% arrange(desc(n))
 ```
 
 ```
@@ -467,14 +467,14 @@ Source: local data frame [8 x 2]
 
   city_region     n
         (chr) (int)
-1           S 17408
-2          NA 14439
-3          NE  9832
-4           N  8299
-5           E  5967
-6          SW  5835
-7          NW  4516
-8           W  2160
+1          NA   951
+2           S   857
+3           N   595
+4          NE   571
+5           E   390
+6          SW   366
+7          NW   299
+8           W   130
 ```
 
 
@@ -636,6 +636,6 @@ head(str_split_fixed(restaurants$Violation_description, " - ", n = 2))
 Next week
 ===
 
-Now that we know how to pattern match and process character data, next week we can talk about text analysis in R.
+Homework 6 assigned last week is due next week, and peer reviews due the week after.
 
-Homework 6 assigned last week will be due next week.
+In class next week, you'll be working on a lab with the restaurant inspection data. You can finish it at home and turn it in the final week of class. (No peer reviews -- I'll grade this one.)

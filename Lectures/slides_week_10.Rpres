@@ -1,0 +1,47 @@
+CSSS 508, Week 10
+===
+author: Rebecca Ferrell
+date: June 1, 2016
+transition: rotate
+width: 1100
+height: 750
+
+
+
+Topics
+===
+
+* Pulling data from Twitter
+    + Point to walkthrough of how to use twitteR yourself without revealing your password and key
+    + Use pre-extracted example
+* Visualizing geocoded data with ggmaps
+* Scraping the web with rvest
+* Mining text with tm and document corpuses
+
+twitteR
+===
+
+```{r, eval=FALSE}
+install.packages("twitteR")
+library(twitteR)
+# popular tweets about UW near campus
+uw_tweets <- searchTwitter("UW", geocode='47.6553,-122.3035,5mi', resultType = "popular", n = 50)
+```
+
+
+HTML source code
+===
+
+viewing it in your browser
+
+Rcurl
+===
+
+APIs
+===
+
+jsonlite
+===
+
+twitteR
+===

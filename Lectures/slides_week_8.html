@@ -808,7 +808,7 @@ hljs.initHighlightingOnLoad();
 
 <pre><code class="r"># getwd()
 library(readr)
-download.file(url = &quot;https://www.dropbox.com/s/ptm1xe43fatpl28/seattle_restaurant_inspections.Rds?raw=1&quot;, destfile = &quot;seattle_restaurant_inspections.Rds&quot;)
+# download.file(url = &quot;https://www.dropbox.com/s/ptm1xe43fatpl28/seattle_restaurant_inspections.Rds?raw=1&quot;, destfile = &quot;seattle_restaurant_inspections.Rds&quot;)
 restaurants &lt;- read_rds(&quot;seattle_restaurant_inspections.Rds&quot;)
 </code></pre>
 
@@ -1233,21 +1233,21 @@ str_extract(direction_test_examples, direction_pattern)
 <section data-transition="default" data-transition-speed="default">
 <h3>Where in the city are the addresses?</h3>
 <div class="slideContent" >
-<pre class="fragment"><code class="r">restaurants %&gt;% mutate(city_region = str_trim(str_extract(Address, direction_pattern))) %&gt;% group_by(city_region) %&gt;% tally() %&gt;% arrange(desc(n))
+<pre class="fragment"><code class="r">restaurants %&gt;% distinct(Address) %&gt;% mutate(city_region = str_trim(str_extract(Address, direction_pattern))) %&gt;% group_by(city_region) %&gt;% tally() %&gt;% arrange(desc(n))
 </code></pre>
 
 <pre class="fragment"><code>Source: local data frame [8 x 2]
 
   city_region     n
         (chr) (int)
-1           S 17408
-2          NA 14439
-3          NE  9832
-4           N  8299
-5           E  5967
-6          SW  5835
-7          NW  4516
-8           W  2160
+1          NA   951
+2           S   857
+3           N   595
+4          NE   571
+5           E   390
+6          SW   366
+7          NW   299
+8           W   130
 </code></pre>
 
 </div>
@@ -1409,9 +1409,9 @@ head(unique(restaurants$street_only), 15)
 <section data-transition="default" data-transition-speed="default">
 <h3>Next week</h3>
 <div class="slideContent" >
-<p>Now that we know how to pattern match and process character data, next week we can talk about text analysis in R.</p>
+<p>Homework 6 assigned last week is due next week, and peer reviews due the week after.</p>
 
-<p>Homework 6 assigned last week will be due next week.</p>
+<p>In class next week, you&#39;ll be working on a lab with the restaurant inspection data. You can finish it at home and turn it in the final week of class. (No peer reviews &ndash; I&#39;ll grade this one.)</p>
 
 </div>
 

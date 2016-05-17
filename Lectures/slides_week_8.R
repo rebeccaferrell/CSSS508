@@ -130,6 +130,7 @@ str_extract(direction_test_examples, direction_pattern)
 
 ## ----extract_directions, cache=TRUE--------------------------------------
 restaurants %>%
+    distinct(Address) %>%
     mutate(city_region = str_trim(str_extract(Address,
                                               direction_pattern))) %>%
     group_by(city_region) %>%

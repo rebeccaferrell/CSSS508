@@ -12,10 +12,10 @@ Data today
 
 We'll use data on food safety inspections in King County from [data.kingcounty.gov](https://data.kingcounty.gov/Health/Food-Establishment-Inspection-Data/f29f-zza5). You can see a map of the data at [dinegerous.com](http://www.dinegerous.com/).
 
-```{r download_restaurant_data, cache=TRUE}
+```{r download_restaurant_data}
 # getwd()
 library(readr)
-download.file(url = "https://www.dropbox.com/s/ptm1xe43fatpl28/seattle_restaurant_inspections.Rds?raw=1", destfile = "seattle_restaurant_inspections.Rds")
+# download.file(url = "https://www.dropbox.com/s/ptm1xe43fatpl28/seattle_restaurant_inspections.Rds?raw=1", destfile = "seattle_restaurant_inspections.Rds")
 restaurants <- read_rds("seattle_restaurant_inspections.Rds")
 ```
 
@@ -35,7 +35,7 @@ We've seen the `nchar` function to get the number of characters in a string. How
 library(dplyr)
 ```
 
-```{r nchar_zip, cache=TRUE}
+```{r nchar_zip}
 restaurants %>% mutate(ZIP_length = nchar(ZIP)) %>%
     group_by(ZIP_length) %>% tally()
 ```
@@ -46,7 +46,7 @@ incremental: true
 
 You may be familiar with `substr` now from the voting homework. We can use it to pull out just the first 5 digits of the ZIP code.
 
-```{r, cache=TRUE}
+```{r}
 restaurants <- restaurants %>%
     mutate(ZIP_5 = substr(ZIP, 1, 5))
 head(unique(restaurants$ZIP_5))
@@ -59,7 +59,7 @@ incremental: true
 
 We can combine parts of strings together using the `paste` function, e.g. to make a whole mailing address:
 
-```{r mailing_address, cache=TRUE}
+```{r mailing_address}
 restaurants <- restaurants %>%
     mutate(mailing_address = paste(Address, ", ", City, ", WA ", ZIP_5, sep = ""))
 head(unique(restaurants$mailing_address))
@@ -182,7 +182,7 @@ incremental: true
 
 `str_to_upper`, `str_to_lower`, `str_to_title` convert cases, which is often a good idea to do before searching for values:
 
-```{r make_seattle_uppercase, cache=TRUE}
+```{r make_seattle_uppercase}
 head(restaurants$City)
 restaurants <- restaurants %>%
     mutate_each(funs(str_to_upper), Name, Address, City)
@@ -212,7 +212,7 @@ incremental: true
 
 Then we can use the `str_trim` function in `stringr` to clean them up all at once:
 
-```{r clean_whitespace, cache=TRUE}
+```{r clean_whitespace}
 # use mutate_each_ to trim all the character columns
 restaurants <- restaurants %>%
     mutate_each_(funs(str_trim), char_columns)
@@ -243,7 +243,7 @@ incremental: true
 
 I want to get inspections for coffee shops. I'll say a coffee shop is anything that has "COFFEE", "ESPRESSO", or "ROASTER" in the name. The regex for this is `COFFEE|ESPRESSO|ROASTER` because `|` is a metacharacter that means "OR". Use the `str_detect` function, which returns `TRUE` if it finds what you're looking for and `FALSE` if it doesn't:
 
-```{r coffee_check, cache=TRUE}
+```{r coffee_check}
 coffee <- restaurants %>% filter(str_detect(Name, "COFFEE|ESPRESSO|ROASTER"))
 head(unique(coffee$Name))
 ```
@@ -281,7 +281,7 @@ How many rows have non-206 numbers?
 ===
 incremental: true
 
-```{r look_for_206_rest, cache=TRUE}
+```{r look_for_206_rest}
 restaurants %>% mutate(has_206_number = str_detect(Phone, area_code_206_pattern)) %>% group_by(has_206_number) %>% tally()
 ```
 
@@ -308,8 +308,8 @@ Where in the city are the addresses?
 ===
 incremental: true
 
-```{r extract_directions, cache=TRUE}
-restaurants %>% mutate(city_region = str_trim(str_extract(Address, direction_pattern))) %>% group_by(city_region) %>% tally() %>% arrange(desc(n))
+```{r extract_directions}
+restaurants %>% distinct(Address) %>% mutate(city_region = str_trim(str_extract(Address, direction_pattern))) %>% group_by(city_region) %>% tally() %>% arrange(desc(n))
 ```
 
 
@@ -405,6 +405,6 @@ head(str_split_fixed(restaurants$Violation_description, " - ", n = 2))
 Next week
 ===
 
-Now that we know how to pattern match and process character data, next week we can talk about text analysis in R.
+Homework 6 assigned last week is due next week, and peer reviews due the week after.
 
-Homework 6 assigned last week will be due next week.
+In class next week, you'll be working on a lab with the restaurant inspection data. You can finish it at home and turn it in the final week of class. (No peer reviews -- I'll grade this one.)
