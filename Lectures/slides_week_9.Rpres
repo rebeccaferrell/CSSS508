@@ -10,19 +10,74 @@ height: 750
 Today
 ===
 
-* Visualizing spatial data
-* Lab: visualizing food safety over space and time
-    + Optional bonus statistical method: longitudinal Poisson regression
+* `ggmap` for mashing up maps with `ggplot2`
+* Lab: visualizing restaurant safety over space and time
 
-Topics
+
+ggmap
+===
+type: section
+
+
+ggmap
 ===
 
-More of a self-guided lab for second to last week. Downloading, importing, cleaning up, visualizing a longitudinal dataset: the food safety one but with more variables added back in so they can also make spatial ggmap plots. Optionally they can try to fit a multilevel Poisson regression model? Maybe make a variable for lagged previous inspection score.
+`ggmap` is a package that goes with `ggplot2` so that you can plot spatial data directly onto map images downloaded from Google Maps, OpenStreetMap, Stamen Maps, or Naver Map (Korea).
 
-* More on simulating data
-* Multilevel modeling
-    + What are the assumptions?
-    + Using `lmer`
-    + Comparing subject-specific trajectories - maybe 538-ish partial pooling example?
-* t-tests
-* ANOVA
+What this package does for you:
+
+1. Queries servers for a map (`get_map`) at the location and scale you want
+2. Plots the raster image as a `ggplot` object
+3. Lets you add more `ggplot` layers like points, 2D density plots, text annotations
+4. Additional functions for interacting with Google Maps (e.g. getting distances by bike)
+
+
+One day of SPD incidents
+===
+
+In Week 5, we looked at types of incidents the Seattle Police Department responded to in a single day. Now, we'll look at where those were.
+
+```{r warning=FALSE, message=FALSE}
+library(ggplot2); library(ggmap); library(readr); library(dplyr)
+```
+
+```{r read_spd_data, cache=TRUE}
+spd_raw <- read_csv("https://raw.githubusercontent.com/rebeccaferrell/CSSS508/master/Seattle_Police_Department_911_Incident_Response.csv")
+```
+
+Quick map plotting with qmplot
+===
+
+```{r quick_plot, message = FALSE, cache=TRUE, fig.width = 10, fig.height = 5, dpi=300, out.width="1100px", out.height="550px"}
+qmplot(data = spd_raw, x = Longitude, y = Latitude, color = I("firebrick"), alpha = I(0.5))
+```
+
+
+You don't even need data with qmap
+===
+
+```{r UW_plot, message = FALSE, cache=TRUE, fig.width = 10, fig.height = 5, dpi=300, out.width="1100px", out.height="550px"}
+qmap(location = "mary gates hall university of washington", zoom = 15, maptype = "watercolor", source = "stamen")
+```
+
+get_map
+===
+
+ggmap
+===
+
+
+Getting regions
+===
+
+Map styles
+===
+
+Adding points
+===
+
+Adding density layers
+===
+
+Labeling points
+===
