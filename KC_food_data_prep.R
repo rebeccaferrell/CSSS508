@@ -58,6 +58,8 @@ seattle_restaurant_inspections <- rest_seattle_whitespace %>%
 
 write_rds(seattle_restaurant_inspections,
           "seattle_restaurant_inspections.Rds")
+write_csv(seattle_restaurant_inspections,
+          "seattle_restaurant_inspections.csv")
 
 # test dropbox link
 download.file(url = "https://www.dropbox.com/s/ptm1xe43fatpl28/seattle_restaurant_inspections.Rds?raw=1",
